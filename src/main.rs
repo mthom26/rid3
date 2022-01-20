@@ -8,6 +8,7 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
+use id3::{Tag, TagLike};
 use tui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
@@ -18,22 +19,23 @@ use tui::{
 
 struct AppState {
     state: ListState,
-    items: Vec<String>,
+    items: Vec<Tag>,
 }
 
 impl AppState {
-    fn new() -> Self {
+    fn new(initial_tags: Vec<Tag>) -> Self {
         Self {
             state: ListState::default(),
-            items: vec![
-                "Hello".to_string(),
-                "Derp".to_string(),
-                "Moar".to_string(),
-                "Stuff".to_string(),
-                "L337".to_string(),
-                "Haxx0r".to_string(),
-                "Finished!".to_string(),
-            ],
+            items: initial_tags,
+            // items: vec![
+            //     "Hello".to_string(),
+            //     "Derp".to_string(),
+            //     "Moar".to_string(),
+            //     "Stuff".to_string(),
+            //     "L337".to_string(),
+            //     "Haxx0r".to_string(),
+            //     "Finished!".to_string(),
+            // ],
         }
     }
 
@@ -66,18 +68,20 @@ impl AppState {
     }
 }
 
-fn main() {
-    crossterm::terminal::enable_raw_mode().unwrap();
+#[tokio::main]
+async fn main() -> Result<(), anyhow::Error> {
+    crossterm::terminal::enable_raw_mode()?;
     let mut stdout = io::stdout();
-    stdout.execute(EnterAlternateScreen).unwrap();
+    stdout.execute(EnterAlternateScreen)?;
 
     let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend).unwrap();
+    let mut terminal = Terminal::new(backend)?;
 
     let tick_rate = Duration::from_millis(200);
     let mut last_tick = Instant::now();
 
-    let mut app = AppState::new();
+    let tags = get_id3s().await?;
+    let mut app = AppState::new(tags);
 
     loop {
         // Render
@@ -94,7 +98,11 @@ fn main() {
                     .items
                     .iter()
                     .map(|item| {
-                        ListItem::new(item.clone()).style(Style::default().fg(Color::LightGreen))
+                        let text = match item.title() {
+                            Some(t) => t,
+                            None => "!Unknown Artist!",
+                        };
+                        ListItem::new(text).style(Style::default().fg(Color::LightGreen))
                     })
                     .collect();
 
@@ -127,7 +135,7 @@ fn main() {
             .unwrap_or_else(|| Duration::from_secs(0));
 
         if event::poll(timeout).unwrap() {
-            if let Event::Key(key) = event::read().unwrap() {
+            if let Event::Key(key) = event::read()? {
                 match key.code {
                     KeyCode::Char('q') => break,
                     KeyCode::Up => app.prev(),
@@ -142,9 +150,21 @@ fn main() {
         }
     }
 
-    crossterm::terminal::disable_raw_mode().unwrap();
-    terminal
-        .backend_mut()
-        .execute(LeaveAlternateScreen)
-        .unwrap();
+    crossterm::terminal::disable_raw_mode()?;
+    terminal.backend_mut().execute(LeaveAlternateScreen)?;
+
+    Ok(())
+}
+
+async fn get_id3s() -> Result<Vec<Tag>, anyhow::Error> {
+    let tags: Vec<Tag> = [
+        "test-files/test.mp3",
+        "test-files/test2.mp3",
+        "test-files/test3.mp3",
+    ]
+    .iter()
+    .map(|p| Tag::read_from_path(p).expect("Could not read Tag"))
+    .collect();
+
+    Ok(tags)
 }
