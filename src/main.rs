@@ -65,6 +65,7 @@ impl AppState {
         self.state.select(Some(i));
     }
 }
+
 fn main() {
     crossterm::terminal::enable_raw_mode().unwrap();
     let mut stdout = io::stdout();
@@ -107,10 +108,16 @@ fn main() {
 
                 f.render_stateful_widget(left_block, chunks[0], &mut app.state);
 
-                // let left_block = Block::default().title("Left").borders(Borders::ALL);
-                // f.render_widget(left_block, chunks[0]);
+                let chunks_right = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([Constraint::Min(0), Constraint::Length(3)].as_ref())
+                    .split(chunks[1]);
+
                 let right_block = Block::default().title("Right").borders(Borders::ALL);
-                f.render_widget(right_block, chunks[1]);
+                f.render_widget(right_block, chunks_right[0]);
+
+                let input_block = Block::default().title("Input").borders(Borders::ALL);
+                f.render_widget(input_block, chunks_right[1]);
             })
             .unwrap();
 
