@@ -1,0 +1,70 @@
+use id3::TagLike;
+use tui::{
+    backend::Backend,
+    layout::{Constraint, Direction, Layout},
+    style::{Color, Modifier, Style},
+    terminal::Terminal,
+    widgets::{Block, Borders, List, ListItem},
+};
+
+use crate::state::State;
+
+pub fn render<B>(terminal: &mut Terminal<B>, state: &mut State) -> Result<(), anyhow::Error>
+where
+    B: Backend,
+{
+    terminal.draw(|f| {
+        let size = f.size();
+
+        let chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
+            .split(size);
+
+        let items: Vec<ListItem> = state
+            .files
+            .iter()
+            .map(|item| {
+                let text = match item.title() {
+                    Some(t) => t,
+                    None => "!Unknown Artist!",
+                };
+                ListItem::new(text).style(Style::default().fg(Color::LightGreen))
+            })
+            .collect();
+
+        let left_block = List::new(items)
+            .block(Block::default().title("Left").borders(Borders::ALL))
+            .highlight_style(
+                Style::default()
+                    .bg(Color::DarkGray)
+                    .add_modifier(Modifier::BOLD),
+            );
+
+        f.render_stateful_widget(left_block, chunks[0], &mut state.files_state);
+
+        let chunks_right = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Min(0), Constraint::Length(3)].as_ref())
+            .split(chunks[1]);
+
+        let right_items: Vec<ListItem> = state
+            .details
+            .iter()
+            .map(|item| ListItem::new(item.clone()).style(Style::default().fg(Color::LightGreen)))
+            .collect();
+        let right_block = List::new(right_items)
+            .block(Block::default().title("Left").borders(Borders::ALL))
+            .highlight_style(
+                Style::default()
+                    .bg(Color::DarkGray)
+                    .add_modifier(Modifier::BOLD),
+            );
+        f.render_stateful_widget(right_block, chunks_right[0], &mut state.details_state);
+
+        let input_block = Block::default().title("Input").borders(Borders::ALL);
+        f.render_widget(input_block, chunks_right[1]);
+    })?;
+
+    Ok(())
+}
