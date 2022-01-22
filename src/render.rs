@@ -4,10 +4,11 @@ use tui::{
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     terminal::Terminal,
-    widgets::{Block, Borders, List, ListItem},
+    text::Span,
+    widgets::{Block, Borders, List, ListItem, Paragraph},
 };
 
-use crate::state::State;
+use crate::state::{Focus, State};
 
 pub fn render<B>(terminal: &mut Terminal<B>, state: &mut State) -> Result<(), anyhow::Error>
 where
@@ -62,8 +63,21 @@ where
             );
         f.render_stateful_widget(right_block, chunks_right[0], &mut state.details_state);
 
-        let input_block = Block::default().title("Input").borders(Borders::ALL);
+        let text = Span::raw(&state.input);
+        let input_block =
+            Paragraph::new(text).block(Block::default().title("Input").borders(Borders::ALL));
         f.render_widget(input_block, chunks_right[1]);
+
+        // Render cursor
+        match state.focus {
+            Focus::Input => {
+                f.set_cursor(
+                    chunks_right[1].x + state.input.len() as u16 + 1,
+                    chunks_right[1].y + 1,
+                );
+            }
+            _ => {}
+        }
     })?;
 
     Ok(())

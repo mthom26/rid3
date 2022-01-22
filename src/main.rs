@@ -14,7 +14,7 @@ mod render;
 mod state;
 mod util;
 use render::render;
-use state::State;
+use state::{Focus, State};
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -41,13 +41,24 @@ async fn main() -> Result<(), anyhow::Error> {
 
         if event::poll(timeout).unwrap() {
             if let Event::Key(key) = event::read()? {
-                match key.code {
-                    KeyCode::Char('q') => break,
-                    KeyCode::Up => state.prev_file(),
-                    KeyCode::Down => state.next_file(),
-                    KeyCode::Char('w') => state.prev_detail(),
-                    KeyCode::Char('s') => state.next_detail(),
-                    _ => {}
+                match state.focus {
+                    Focus::Input => match key.code {
+                        KeyCode::Char(c) => state.input.push(c),
+                        KeyCode::Backspace => {
+                            state.input.pop();
+                        }
+                        KeyCode::Enter => state.set_input(),
+                        KeyCode::Esc => state.switch_focus(),
+                        _ => {}
+                    },
+                    _ => match key.code {
+                        KeyCode::Char('q') => break,
+                        KeyCode::Up => state.prev(),
+                        KeyCode::Down => state.next(),
+                        KeyCode::Tab => state.switch_focus(),
+                        KeyCode::Enter => state.switch_input(),
+                        _ => {}
+                    },
                 }
             }
         }
