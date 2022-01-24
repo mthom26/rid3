@@ -13,8 +13,8 @@ use tui::{backend::CrosstermBackend, Terminal};
 mod render;
 mod state;
 mod util;
-use render::render;
-use state::{Focus, State};
+use render::{render_files, render_main};
+use state::{files_state::FilesState, main_state::MainState, AppEvent, ScreenState};
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -29,10 +29,17 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut last_tick = Instant::now();
 
     let tags = util::get_id3s().await?;
-    let mut state = State::new(tags);
+
+    let mut screen_state = ScreenState::Main;
+    let mut main_state = MainState::new(tags);
+    let mut files_state = FilesState::new()?;
 
     loop {
-        render(&mut terminal, &mut state)?;
+        // Render
+        match screen_state {
+            ScreenState::Main => render_main(&mut terminal, &mut main_state)?,
+            ScreenState::Files => render_files(&mut terminal, &mut files_state)?,
+        }
 
         // Handle input
         let timeout = tick_rate
@@ -41,24 +48,23 @@ async fn main() -> Result<(), anyhow::Error> {
 
         if event::poll(timeout).unwrap() {
             if let Event::Key(key) = event::read()? {
-                match state.focus {
-                    Focus::Input => match key.code {
-                        KeyCode::Char(c) => state.input.push(c),
-                        KeyCode::Backspace => {
-                            state.input.pop();
-                        }
-                        KeyCode::Enter => state.set_input(),
-                        KeyCode::Esc => state.switch_focus(),
+                match key.code {
+                    KeyCode::Char('1') => {
+                        screen_state = ScreenState::Main;
+                        continue;
+                    }
+                    KeyCode::Char('2') => {
+                        screen_state = ScreenState::Files;
+                        continue;
+                    }
+                    _ => {}
+                }
+                match screen_state {
+                    ScreenState::Main => match main_state.handle_input(&key) {
+                        AppEvent::Quit => break,
                         _ => {}
                     },
-                    _ => match key.code {
-                        KeyCode::Char('q') => break,
-                        KeyCode::Up => state.prev(),
-                        KeyCode::Down => state.next(),
-                        KeyCode::Tab => state.switch_focus(),
-                        KeyCode::Enter => state.switch_input(),
-                        _ => {}
-                    },
+                    _ => {}
                 }
             }
         }

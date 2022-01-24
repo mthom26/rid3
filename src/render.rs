@@ -8,9 +8,15 @@ use tui::{
     widgets::{Block, Borders, List, ListItem, Paragraph},
 };
 
-use crate::state::{Focus, State};
+use crate::state::{
+    files_state::FilesState,
+    main_state::{Focus, MainState},
+};
 
-pub fn render<B>(terminal: &mut Terminal<B>, state: &mut State) -> Result<(), anyhow::Error>
+pub fn render_main<B>(
+    terminal: &mut Terminal<B>,
+    state: &mut MainState,
+) -> Result<(), anyhow::Error>
 where
     B: Backend,
 {
@@ -78,6 +84,42 @@ where
             }
             _ => {}
         }
+    })?;
+
+    Ok(())
+}
+
+pub fn render_files<B>(
+    terminal: &mut Terminal<B>,
+    state: &mut FilesState,
+) -> Result<(), anyhow::Error>
+where
+    B: Backend,
+{
+    terminal.draw(|f| {
+        let size = f.size();
+
+        let items: Vec<ListItem> = state
+            .files
+            .iter()
+            .map(|entry| {
+                let text = entry
+                    .file_name()
+                    .into_string()
+                    .expect("Could not parse OsString");
+                ListItem::new(text).style(Style::default().fg(Color::LightGreen))
+            })
+            .collect();
+
+        let block = List::new(items)
+            .block(Block::default().title("Files").borders(Borders::ALL))
+            .highlight_style(
+                Style::default()
+                    .bg(Color::DarkGray)
+                    .add_modifier(Modifier::BOLD),
+            );
+
+        f.render_stateful_widget(block, size, &mut state.files_state);
     })?;
 
     Ok(())

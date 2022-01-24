@@ -1,6 +1,8 @@
+use crossterm::event::{KeyCode, KeyEvent};
 use id3::{Tag, TagLike};
 use tui::widgets::ListState;
 
+use crate::state::AppEvent;
 use crate::util;
 
 pub enum Focus {
@@ -9,7 +11,7 @@ pub enum Focus {
     Input,
 }
 
-pub struct State {
+pub struct MainState {
     pub focus: Focus,
 
     pub files_state: ListState,
@@ -21,7 +23,7 @@ pub struct State {
     pub input: String,
 }
 
-impl State {
+impl MainState {
     pub fn new(initial_tags: Vec<Tag>) -> Self {
         Self {
             focus: Focus::Files,
@@ -35,6 +37,29 @@ impl State {
             ],
             input: "".to_string(),
         }
+    }
+
+    pub fn handle_input(&mut self, key: &KeyEvent) -> AppEvent {
+        match self.focus {
+            Focus::Input => match key.code {
+                KeyCode::Char(c) => self.input.push(c),
+                KeyCode::Backspace => {
+                    self.input.pop();
+                }
+                KeyCode::Enter => self.set_input(),
+                KeyCode::Esc => self.switch_focus(),
+                _ => {}
+            },
+            _ => match key.code {
+                KeyCode::Char('q') => return AppEvent::Quit,
+                KeyCode::Up => self.prev(),
+                KeyCode::Down => self.next(),
+                KeyCode::Tab => self.switch_focus(),
+                KeyCode::Enter => self.switch_input(),
+                _ => {}
+            },
+        }
+        AppEvent::None
     }
 
     fn update_details(&mut self) {
@@ -58,7 +83,14 @@ impl State {
 
     pub fn switch_focus(&mut self) {
         match self.focus {
-            Focus::Files => self.focus = Focus::Details,
+            Focus::Files => {
+                // On switching focus to the details list for the first time
+                // select the first item
+                if self.details_state.selected() == None {
+                    self.details_state.select(Some(0));
+                }
+                self.focus = Focus::Details
+            }
             Focus::Details => self.focus = Focus::Files,
             Focus::Input => self.focus = Focus::Files,
         }
