@@ -81,7 +81,7 @@ impl MainState {
         self.details = vec![title, artist, album];
     }
 
-    pub fn switch_focus(&mut self) {
+    fn switch_focus(&mut self) {
         match self.focus {
             Focus::Files => {
                 // On switching focus to the details list for the first time
@@ -96,7 +96,7 @@ impl MainState {
         }
     }
 
-    pub fn switch_input(&mut self) {
+    fn switch_input(&mut self) {
         match self.focus {
             Focus::Input => {}
             _ => {
@@ -105,7 +105,7 @@ impl MainState {
         }
     }
 
-    pub fn set_input(&mut self) {
+    fn set_input(&mut self) {
         match self.files_state.selected() {
             Some(i) => {
                 match self.details_state.selected() {
@@ -123,7 +123,7 @@ impl MainState {
         }
     }
 
-    pub fn next(&mut self) {
+    fn next(&mut self) {
         match self.focus {
             Focus::Files => {
                 let i = match self.files_state.selected() {
@@ -144,7 +144,7 @@ impl MainState {
         }
     }
 
-    pub fn prev(&mut self) {
+    fn prev(&mut self) {
         match self.focus {
             Focus::Files => {
                 let i = match self.files_state.selected() {
@@ -163,5 +163,16 @@ impl MainState {
             }
             _ => {}
         }
+    }
+
+    fn clear_files(&mut self) {
+        self.files.clear();
+        self.details.clear();
+        self.files_state = ListState::default();
+        self.details_state = ListState::default();
+    }
+
+    pub fn add_files(&mut self, files: &mut Vec<Tag>) {
+        self.files.append(files);
     }
 }

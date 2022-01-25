@@ -67,6 +67,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     },
                     ScreenState::Files => match files_state.handle_input(&key) {
                         AppEvent::Quit => break,
+                        AppEvent::AddFiles(mut tags) => main_state.add_files(&mut tags),
                         _ => {}
                     },
                 }
