@@ -48,6 +48,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
         if event::poll(timeout).unwrap() {
             if let Event::Key(key) = event::read()? {
+                // Handle ScreenState inputs
                 match key.code {
                     KeyCode::Char('1') => {
                         screen_state = ScreenState::Main;
@@ -64,7 +65,10 @@ async fn main() -> Result<(), anyhow::Error> {
                         AppEvent::Quit => break,
                         _ => {}
                     },
-                    _ => {}
+                    ScreenState::Files => match files_state.handle_input(&key) {
+                        AppEvent::Quit => break,
+                        _ => {}
+                    },
                 }
             }
         }

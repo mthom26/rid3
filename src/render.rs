@@ -99,17 +99,15 @@ where
     terminal.draw(|f| {
         let size = f.size();
 
-        let items: Vec<ListItem> = state
-            .files
-            .iter()
-            .map(|entry| {
-                let text = entry
-                    .file_name()
-                    .into_string()
-                    .expect("Could not parse OsString");
-                ListItem::new(text).style(Style::default().fg(Color::LightGreen))
-            })
-            .collect();
+        let mut items = vec![ListItem::new("../").style(Style::default().fg(Color::LightGreen))];
+        for entry in state.files.iter() {
+            let text = entry
+                .file_name()
+                .into_string()
+                .expect("Could not parse OsString");
+
+            items.push(ListItem::new(text).style(Style::default().fg(Color::LightGreen)));
+        }
 
         let block = List::new(items)
             .block(Block::default().title("Files").borders(Borders::ALL))
