@@ -1,13 +1,20 @@
+use std::path::PathBuf;
+
 use id3::Tag;
 
-pub async fn get_id3s() -> Result<Vec<Tag>, anyhow::Error> {
-    let tags: Vec<Tag> = [
+pub async fn get_id3s() -> Result<Vec<(PathBuf, Tag)>, anyhow::Error> {
+    let tags = [
         "test-files/test.mp3",
         "test-files/test2.mp3",
         "test-files/test3.mp3",
     ]
     .iter()
-    .map(|p| Tag::read_from_path(p).expect("Could not read Tag"))
+    .map(|p| {
+        (
+            PathBuf::from(p),
+            Tag::read_from_path(p).expect("Could not read Tag"),
+        )
+    })
     .collect();
 
     Ok(tags)

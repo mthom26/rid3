@@ -1,5 +1,7 @@
+use std::path::PathBuf;
+
 use crossterm::event::{KeyCode, KeyEvent};
-use id3::{Tag, TagLike};
+use id3::{Tag, TagLike, Version};
 use tui::widgets::ListState;
 
 use crate::state::AppEvent;
@@ -11,11 +13,13 @@ pub enum Focus {
     Input,
 }
 
+// TODO
+// - Check for duplicate Paths when adding new entries 
 pub struct MainState {
     pub focus: Focus,
 
     pub files_state: ListState,
-    pub files: Vec<Tag>,
+    pub files: Vec<(PathBuf, Tag)>,
 
     pub details_state: ListState,
     pub details: Vec<String>,
@@ -24,7 +28,7 @@ pub struct MainState {
 }
 
 impl MainState {
-    pub fn new(initial_tags: Vec<Tag>) -> Self {
+    pub fn new(initial_tags: Vec<(PathBuf, Tag)>) -> Self {
         Self {
             focus: Focus::Files,
             files_state: ListState::default(),
@@ -52,6 +56,8 @@ impl MainState {
             },
             _ => match key.code {
                 KeyCode::Char('q') => return AppEvent::Quit,
+                KeyCode::Char('c') => self.clear_files(),
+                KeyCode::Char('w') => self.write_tags().expect("Could not write tags"),
                 KeyCode::Up => self.prev(),
                 KeyCode::Down => self.next(),
                 KeyCode::Tab => self.switch_focus(),
@@ -65,15 +71,15 @@ impl MainState {
     fn update_details(&mut self) {
         let index = self.files_state.selected().unwrap(); // This shouldn't fail right?
 
-        let title = match self.files[index].title() {
+        let title = match self.files[index].1.title() {
             Some(t) => format!("| Title\n| {}", t),
             None => "!No title!".to_string(),
         };
-        let artist = match self.files[index].artist() {
+        let artist = match self.files[index].1.artist() {
             Some(t) => format!("| Artist\n| {}", t),
             None => "!No artist!".to_string(),
         };
-        let album = match self.files[index].album() {
+        let album = match self.files[index].1.album() {
             Some(t) => format!("| Album\n| {}", t),
             None => "!No album!".to_string(),
         };
@@ -110,9 +116,9 @@ impl MainState {
             Some(i) => {
                 match self.details_state.selected() {
                     // 0 - Title, 1 - Artist, 2 - Album, this needs to be improved...
-                    Some(0) => self.files[i].set_title(&self.input),
-                    Some(1) => self.files[i].set_artist(&self.input),
-                    Some(2) => self.files[i].set_album(&self.input),
+                    Some(0) => self.files[i].1.set_title(&self.input),
+                    Some(1) => self.files[i].1.set_artist(&self.input),
+                    Some(2) => self.files[i].1.set_album(&self.input),
                     _ => {}
                 }
                 self.input = "".to_string();
@@ -124,6 +130,9 @@ impl MainState {
     }
 
     fn next(&mut self) {
+        if self.files.is_empty() {
+            return;
+        }
         match self.focus {
             Focus::Files => {
                 let i = match self.files_state.selected() {
@@ -145,6 +154,9 @@ impl MainState {
     }
 
     fn prev(&mut self) {
+        if self.files.is_empty() {
+            return;
+        }
         match self.focus {
             Focus::Files => {
                 let i = match self.files_state.selected() {
@@ -172,7 +184,16 @@ impl MainState {
         self.details_state = ListState::default();
     }
 
-    pub fn add_files(&mut self, files: &mut Vec<Tag>) {
+    pub fn add_files(&mut self, files: &mut Vec<(PathBuf, Tag)>) {
         self.files.append(files);
+    }
+
+    // Write updated tags to files
+    fn write_tags(&mut self) -> Result<(), anyhow::Error> {
+        for (path, tag) in self.files.iter() {
+            tag.write_to_path(path, Version::Id3v24)?;
+        }
+
+        Ok(())
     }
 }

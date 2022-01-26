@@ -32,7 +32,7 @@ where
             .files
             .iter()
             .map(|item| {
-                let text = match item.title() {
+                let text = match item.1.title() {
                     Some(t) => t,
                     None => "!Unknown Artist!",
                 };
