@@ -13,7 +13,7 @@ use tui::{backend::CrosstermBackend, Terminal};
 mod render;
 mod state;
 mod util;
-use render::{render_files, render_main};
+use render::{files_render::render_files, main_render::render_main};
 use state::{files_state::FilesState, main_state::MainState, AppEvent, ScreenState};
 
 #[tokio::main]
@@ -49,6 +49,8 @@ async fn main() -> Result<(), anyhow::Error> {
         if event::poll(timeout).unwrap() {
             if let Event::Key(key) = event::read()? {
                 // Handle ScreenState inputs
+                // TODO - Fix handling this input here prevents typing numbers when
+                //        inputting data to one of the details fields. Derp...
                 match key.code {
                     KeyCode::Char('1') => {
                         screen_state = ScreenState::Main;

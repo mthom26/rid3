@@ -14,7 +14,7 @@ pub enum Focus {
 }
 
 // TODO
-// - Check for duplicate Paths when adding new entries 
+// - Check for duplicate Paths when adding new entries
 pub struct MainState {
     pub focus: Focus,
 
@@ -68,7 +68,7 @@ impl MainState {
         AppEvent::None
     }
 
-    fn update_details(&mut self) {
+    fn _update_details(&mut self) {
         let index = self.files_state.selected().unwrap(); // This shouldn't fail right?
 
         let title = match self.files[index].1.title() {
@@ -85,6 +85,17 @@ impl MainState {
         };
 
         self.details = vec![title, artist, album];
+    }
+
+    fn update_details(&mut self) {
+        let index = self.files_state.selected().unwrap(); // This shouldn't fail right?
+        let mut new_details = vec![];
+        for frame in self.files[index].1.frames() {
+            // TODO - Filter out frames that I don't want to handle (picture, encoding, etc.),
+            //        stick to text fields
+            new_details.push(format!("| {}\n| {}", frame.name(), frame.content()));
+        }
+        self.details = new_details;
     }
 
     fn switch_focus(&mut self) {
