@@ -55,7 +55,10 @@ where
         let right_items: Vec<ListItem> = state
             .details
             .iter()
-            .map(|item| ListItem::new(item.clone()).style(Style::default().fg(Color::LightGreen)))
+            .map(|item| {
+                let text = format!("| {}\n| {}\n", item.name(), item.content());
+                ListItem::new(text).style(Style::default().fg(Color::LightGreen))
+            })
             .collect();
         let right_block = List::new(right_items)
             .block(Block::default().title("Left").borders(Borders::ALL))

@@ -6,7 +6,7 @@ pub async fn get_id3s() -> Result<Vec<(PathBuf, Tag)>, anyhow::Error> {
     let tags = [
         "test-files/test.mp3",
         "test-files/test2.mp3",
-        "test-files/test3.mp3",
+        // "test-files/test3.mp3",
     ]
     .iter()
     .map(|p| {

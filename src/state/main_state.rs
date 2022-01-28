@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use crossterm::event::{KeyCode, KeyEvent};
-use id3::{Tag, TagLike, Version};
+use id3::{Frame, Tag, TagLike, Version};
 use tui::widgets::ListState;
 
 use crate::state::AppEvent;
@@ -22,7 +22,8 @@ pub struct MainState {
     pub files: Vec<(PathBuf, Tag)>,
 
     pub details_state: ListState,
-    pub details: Vec<String>,
+    // pub details: Vec<String>,
+    pub details: Vec<Frame>,
 
     pub input: String,
 }
@@ -35,9 +36,9 @@ impl MainState {
             files: initial_tags,
             details_state: ListState::default(),
             details: vec![
-                "| Title\n| ".to_string(),
-                "| Artist\n| ".to_string(),
-                "| Album\n| ".to_string(),
+                // "| Title\n| ".to_string(),
+                // "| Artist\n| ".to_string(),
+                // "| Album\n| ".to_string(),
             ],
             input: "".to_string(),
         }
@@ -68,32 +69,17 @@ impl MainState {
         AppEvent::None
     }
 
-    fn _update_details(&mut self) {
-        let index = self.files_state.selected().unwrap(); // This shouldn't fail right?
-
-        let title = match self.files[index].1.title() {
-            Some(t) => format!("| Title\n| {}", t),
-            None => "!No title!".to_string(),
-        };
-        let artist = match self.files[index].1.artist() {
-            Some(t) => format!("| Artist\n| {}", t),
-            None => "!No artist!".to_string(),
-        };
-        let album = match self.files[index].1.album() {
-            Some(t) => format!("| Album\n| {}", t),
-            None => "!No album!".to_string(),
-        };
-
-        self.details = vec![title, artist, album];
-    }
-
     fn update_details(&mut self) {
         let index = self.files_state.selected().unwrap(); // This shouldn't fail right?
         let mut new_details = vec![];
         for frame in self.files[index].1.frames() {
-            // TODO - Filter out frames that I don't want to handle (picture, encoding, etc.),
-            //        stick to text fields
-            new_details.push(format!("| {}\n| {}", frame.name(), frame.content()));
+            // Only handle text frames
+            if frame.id().starts_with("T") {
+                // Don't handle user defined text frames
+                if frame.id() != "TXXX" {
+                    new_details.push(frame.clone());
+                }
+            }
         }
         self.details = new_details;
     }
@@ -126,10 +112,12 @@ impl MainState {
         match self.files_state.selected() {
             Some(i) => {
                 match self.details_state.selected() {
-                    // 0 - Title, 1 - Artist, 2 - Album, this needs to be improved...
-                    Some(0) => self.files[i].1.set_title(&self.input),
-                    Some(1) => self.files[i].1.set_artist(&self.input),
-                    Some(2) => self.files[i].1.set_album(&self.input),
+                    Some(j) => {
+                        let id = self.details[j].id();
+                        let new_frame = Frame::text(id, &self.input);
+                        self.details[j] = new_frame.clone();
+                        self.files[i].1.add_frame(new_frame);
+                    }
                     _ => {}
                 }
                 self.input = "".to_string();
