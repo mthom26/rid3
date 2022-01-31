@@ -4,7 +4,7 @@ use crossterm::event::{KeyCode, KeyEvent};
 use id3::{Frame, Tag, TagLike, Version};
 use tui::widgets::ListState;
 
-use crate::state::AppEvent;
+use crate::state::{update_screen_state, AppEvent};
 use crate::util;
 
 pub enum Focus {
@@ -59,6 +59,7 @@ impl MainState {
                 KeyCode::Char('q') => return AppEvent::Quit,
                 KeyCode::Char('c') => self.clear_files(),
                 KeyCode::Char('w') => self.write_tags().expect("Could not write tags"),
+                KeyCode::Char(c) => return update_screen_state(c),
                 KeyCode::Up => self.prev(),
                 KeyCode::Down => self.next(),
                 KeyCode::Tab => self.switch_focus(),

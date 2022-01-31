@@ -17,6 +17,7 @@ pub enum AppEvent {
     None,
     Quit,
     AddFiles(Vec<(PathBuf, Tag)>),
+    NewScreenState(ScreenState),
 }
 
 // Get a Vec of (Path, Tags) from a Vec of DirEntrys
@@ -55,4 +56,13 @@ fn get_entries(path: &Path) -> Result<Vec<DirEntry>, anyhow::Error> {
         .collect();
 
     Ok(files)
+}
+
+// Update ScreenState from any state
+fn update_screen_state(c: char) -> AppEvent {
+    match c {
+        '1' => AppEvent::NewScreenState(ScreenState::Main),
+        '2' => AppEvent::NewScreenState(ScreenState::Files),
+        _ => AppEvent::None,
+    }
 }

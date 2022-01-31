@@ -3,7 +3,7 @@ use std::{env, fs, path::PathBuf};
 use crossterm::event::{KeyCode, KeyEvent};
 use tui::widgets::ListState;
 
-use crate::state::{get_entries, get_tags, AppEvent};
+use crate::state::{get_entries, get_tags, update_screen_state, AppEvent};
 use crate::util;
 
 pub struct FilesState {
@@ -30,6 +30,7 @@ impl FilesState {
         match key.code {
             KeyCode::Char('q') => return AppEvent::Quit,
             KeyCode::Char('a') => return self.add_all_files().expect("Could not add files"),
+            KeyCode::Char(c) => return update_screen_state(c),
             KeyCode::Up => self.prev(),
             KeyCode::Down => self.next(),
             KeyCode::Enter => {

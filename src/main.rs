@@ -4,7 +4,7 @@ use std::{
 };
 
 use crossterm::{
-    event::{self, Event, KeyCode},
+    event::{self, Event},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
@@ -48,27 +48,15 @@ async fn main() -> Result<(), anyhow::Error> {
 
         if event::poll(timeout).unwrap() {
             if let Event::Key(key) = event::read()? {
-                // Handle ScreenState inputs
-                // TODO - Fix handling this input here prevents typing numbers when
-                //        inputting data to one of the details fields. Derp...
-                match key.code {
-                    KeyCode::Char('1') => {
-                        screen_state = ScreenState::Main;
-                        continue;
-                    }
-                    KeyCode::Char('2') => {
-                        screen_state = ScreenState::Files;
-                        continue;
-                    }
-                    _ => {}
-                }
                 match screen_state {
                     ScreenState::Main => match main_state.handle_input(&key) {
                         AppEvent::Quit => break,
+                        AppEvent::NewScreenState(s) => screen_state = s,
                         _ => {}
                     },
                     ScreenState::Files => match files_state.handle_input(&key) {
                         AppEvent::Quit => break,
+                        AppEvent::NewScreenState(s) => screen_state = s,
                         AppEvent::AddFiles(mut tags) => main_state.add_files(&mut tags),
                         _ => {}
                     },
