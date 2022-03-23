@@ -83,6 +83,12 @@ impl MainState {
             }
         }
         self.details = new_details;
+        // Check old `details_state` isn't referring to an index outside `new_details` length
+        if let Some(i) = self.details_state.selected() {
+            if self.details.len() - 1 < i {
+                self.details_state.select(Some(0));
+            }
+        }
     }
 
     fn switch_focus(&mut self) {
