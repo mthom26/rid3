@@ -5,11 +5,13 @@ use tui::{
     widgets::{Block, Borders, List, ListItem},
 };
 
+use crate::render::help_render::render_help;
 use crate::state::files_state::FilesState;
 
 pub fn render_files<B>(
     terminal: &mut Terminal<B>,
     state: &mut FilesState,
+    show_help: bool,
 ) -> Result<(), anyhow::Error>
 where
     B: Backend,
@@ -36,6 +38,10 @@ where
             );
 
         f.render_stateful_widget(block, size, &mut state.files_state);
+
+        if show_help {
+            render_help(f);
+        }
     })?;
 
     Ok(())

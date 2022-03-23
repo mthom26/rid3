@@ -59,6 +59,7 @@ impl MainState {
                 KeyCode::Char('q') => return AppEvent::Quit,
                 KeyCode::Char('c') => self.clear_files(),
                 KeyCode::Char('w') => self.write_tags().expect("Could not write tags"),
+                KeyCode::Char('h') => return AppEvent::NewHelpState,
                 KeyCode::Char(c) => return update_screen_state(c),
                 KeyCode::Up => self.prev(),
                 KeyCode::Down => self.next(),

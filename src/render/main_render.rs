@@ -8,11 +8,13 @@ use tui::{
     widgets::{Block, Borders, List, ListItem, Paragraph},
 };
 
+use crate::render::help_render::render_help;
 use crate::state::main_state::{Focus, MainState};
 
 pub fn render_main<B>(
     terminal: &mut Terminal<B>,
     state: &mut MainState,
+    show_help: bool,
 ) -> Result<(), anyhow::Error>
 where
     B: Backend,
@@ -83,6 +85,10 @@ where
                 );
             }
             _ => {}
+        }
+
+        if show_help {
+            render_help(f);
         }
     })?;
 

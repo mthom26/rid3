@@ -18,6 +18,7 @@ pub enum AppEvent {
     Quit,
     AddFiles(Vec<(PathBuf, Tag)>),
     NewScreenState(ScreenState),
+    NewHelpState,
 }
 
 // Get a Vec of (Path, Tags) from a Vec of DirEntrys

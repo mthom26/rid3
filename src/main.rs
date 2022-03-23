@@ -31,14 +31,15 @@ async fn main() -> Result<(), anyhow::Error> {
     let tags = util::get_id3s().await?;
 
     let mut screen_state = ScreenState::Main;
+    let mut show_help = false;
     let mut main_state = MainState::new(tags);
     let mut files_state = FilesState::new()?;
 
     loop {
         // Render
         match screen_state {
-            ScreenState::Main => render_main(&mut terminal, &mut main_state)?,
-            ScreenState::Files => render_files(&mut terminal, &mut files_state)?,
+            ScreenState::Main => render_main(&mut terminal, &mut main_state, show_help)?,
+            ScreenState::Files => render_files(&mut terminal, &mut files_state, show_help)?,
         }
 
         // Handle input
@@ -52,12 +53,14 @@ async fn main() -> Result<(), anyhow::Error> {
                     ScreenState::Main => match main_state.handle_input(&key) {
                         AppEvent::Quit => break,
                         AppEvent::NewScreenState(s) => screen_state = s,
+                        AppEvent::NewHelpState => show_help = !show_help,
                         _ => {}
                     },
                     ScreenState::Files => match files_state.handle_input(&key) {
                         AppEvent::Quit => break,
                         AppEvent::NewScreenState(s) => screen_state = s,
                         AppEvent::AddFiles(mut tags) => main_state.add_files(&mut tags),
+                        AppEvent::NewHelpState => show_help = !show_help,
                         _ => {}
                     },
                 }

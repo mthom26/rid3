@@ -30,6 +30,7 @@ impl FilesState {
         match key.code {
             KeyCode::Char('q') => return AppEvent::Quit,
             KeyCode::Char('a') => return self.add_all_files().expect("Could not add files"),
+            KeyCode::Char('h') => return AppEvent::NewHelpState,
             KeyCode::Char(c) => return update_screen_state(c),
             KeyCode::Up => self.prev(),
             KeyCode::Down => self.next(),
