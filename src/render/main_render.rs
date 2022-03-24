@@ -11,6 +11,8 @@ use tui::{
 use crate::render::help_render::render_help;
 use crate::state::main_state::{Focus, MainState};
 
+const HELP_TEXT: [&str; 3] = ["Main Help", "TODO", "Add hotkeys relevant to main screen"];
+
 pub fn render_main<B>(
     terminal: &mut Terminal<B>,
     state: &mut MainState,
@@ -88,7 +90,7 @@ where
         }
 
         if show_help {
-            render_help(f);
+            render_help(f, &HELP_TEXT);
         }
     })?;
 

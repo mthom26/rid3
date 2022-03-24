@@ -8,6 +8,8 @@ use tui::{
 use crate::render::help_render::render_help;
 use crate::state::files_state::FilesState;
 
+const HELP_TEXT: [&str; 3] = ["Files Help", "TODO", "Add hotkeys relevant to files screen"];
+
 pub fn render_files<B>(
     terminal: &mut Terminal<B>,
     state: &mut FilesState,
@@ -40,7 +42,7 @@ where
         f.render_stateful_widget(block, size, &mut state.files_state);
 
         if show_help {
-            render_help(f);
+            render_help(f, &HELP_TEXT);
         }
     })?;
 

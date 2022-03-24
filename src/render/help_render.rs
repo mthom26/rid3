@@ -1,12 +1,12 @@
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout},
-    style::{Color, Style},
-    widgets::{Block, Borders, Clear},
+    style::{Color, Modifier, Style},
+    widgets::{Block, Borders, Clear, List, ListItem},
     Frame,
 };
 
-pub fn render_help<B>(frame: &mut Frame<B>)
+pub fn render_help<B>(frame: &mut Frame<B>, items: &[&str])
 where
     B: Backend,
 {
@@ -36,10 +36,19 @@ where
         )
         .split(chunks_horizontal[1]);
 
-    let block = Block::default()
-        .title("Help")
-        .borders(Borders::ALL)
-        .style(Style::default().fg(Color::LightYellow));
+    let list_items: Vec<ListItem> = items
+        .iter()
+        .map(|item| ListItem::new(*item).style(Style::default().fg(Color::LightGreen)))
+        .collect();
+
+    let block = List::new(list_items)
+        .block(Block::default().title("Help").borders(Borders::ALL))
+        .style(Style::default().fg(Color::LightYellow))
+        .highlight_style(
+            Style::default()
+                .bg(Color::DarkGray)
+                .add_modifier(Modifier::BOLD),
+        );
 
     frame.render_widget(Clear, chunks_vertical[1]);
     frame.render_widget(block, chunks_vertical[1]);

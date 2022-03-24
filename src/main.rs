@@ -53,14 +53,16 @@ async fn main() -> Result<(), anyhow::Error> {
                     ScreenState::Main => match main_state.handle_input(&key) {
                         AppEvent::Quit => break,
                         AppEvent::NewScreenState(s) => screen_state = s,
-                        AppEvent::NewHelpState => show_help = !show_help,
+                        AppEvent::ToggleHelp => show_help = !show_help,
+                        AppEvent::HideHelp => show_help = false,
                         _ => {}
                     },
                     ScreenState::Files => match files_state.handle_input(&key) {
                         AppEvent::Quit => break,
                         AppEvent::NewScreenState(s) => screen_state = s,
                         AppEvent::AddFiles(mut tags) => main_state.add_files(&mut tags),
-                        AppEvent::NewHelpState => show_help = !show_help,
+                        AppEvent::ToggleHelp => show_help = !show_help,
+                        AppEvent::HideHelp => show_help = false,
                         _ => {}
                     },
                 }
