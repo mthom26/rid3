@@ -1,12 +1,13 @@
-use std::{
-    io,
-    time::{Duration, Instant},
-};
+use std::{io, time::Duration};
 
 use crossterm::{
     event::{self, Event},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
+};
+use tokio::{
+    sync::{mpsc, watch},
+    time::sleep,
 };
 use tui::{backend::CrosstermBackend, Terminal};
 
@@ -25,15 +26,42 @@ async fn main() -> Result<(), anyhow::Error> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let tick_rate = Duration::from_millis(200);
-    let mut last_tick = Instant::now();
-
     let tags = util::get_id3s().await?;
 
     let mut screen_state = ScreenState::Main;
     let mut show_help = false;
     let mut main_state = MainState::new(tags);
     let mut files_state = FilesState::new()?;
+
+    let (input_tx, mut input_rx) = mpsc::channel(32);
+    let (timer_tx, mut timer_rx) = mpsc::channel(32);
+    let (quit_tx, quit_rx) = watch::channel(());
+    let quit_rx1 = quit_rx.clone();
+
+    // Input thread
+    tokio::spawn(async move {
+        loop {
+            if event::poll(Duration::from_millis(200)).unwrap() {
+                if let Event::Key(key) = event::read().unwrap() {
+                    input_tx.send(key).await.unwrap();
+                }
+            }
+            if quit_rx.has_changed().unwrap() {
+                break;
+            }
+        }
+    });
+
+    // Timer thread
+    tokio::spawn(async move {
+        loop {
+            sleep(Duration::from_millis(200)).await;
+            timer_tx.send(()).await.unwrap();
+            if quit_rx1.has_changed().unwrap() {
+                break;
+            }
+        }
+    });
 
     loop {
         // Render
@@ -42,13 +70,9 @@ async fn main() -> Result<(), anyhow::Error> {
             ScreenState::Files => render_files(&mut terminal, &mut files_state, show_help)?,
         }
 
-        // Handle input
-        let timeout = tick_rate
-            .checked_sub(last_tick.elapsed())
-            .unwrap_or_else(|| Duration::from_secs(0));
-
-        if event::poll(timeout).unwrap() {
-            if let Event::Key(key) = event::read()? {
+        tokio::select! {
+            key = input_rx.recv() => {
+                let key = key.unwrap();
                 match screen_state {
                     ScreenState::Main => match main_state.handle_input(&key) {
                         AppEvent::Quit => break,
@@ -67,12 +91,12 @@ async fn main() -> Result<(), anyhow::Error> {
                     },
                 }
             }
-        }
-
-        if last_tick.elapsed() >= tick_rate {
-            last_tick = Instant::now();
+            _ = timer_rx.recv() => { /* Nothing to do, just proceed to next loop iteration */ }
         }
     }
+
+    quit_tx.send(()).unwrap();
+    quit_tx.closed().await;
 
     crossterm::terminal::disable_raw_mode()?;
     terminal.backend_mut().execute(LeaveAlternateScreen)?;
