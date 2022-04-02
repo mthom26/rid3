@@ -8,7 +8,7 @@ use tui::{
     widgets::{Block, Borders, List, ListItem, Paragraph},
 };
 
-use crate::render::help_render::render_help;
+use crate::render::{help_render::render_help, logs_render::render_logs};
 use crate::state::main_state::{Focus, MainState};
 
 const HELP_TEXT: [&str; 3] = ["Main Help", "TODO", "Add hotkeys relevant to main screen"];
@@ -24,10 +24,15 @@ where
     terminal.draw(|f| {
         let size = f.size();
 
+        let c = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Min(0), Constraint::Length(10)].as_ref())
+            .split(size);
+
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
-            .split(size);
+            .split(c[0]);
 
         let items: Vec<ListItem> = state
             .files
@@ -77,6 +82,8 @@ where
         let input_block =
             Paragraph::new(text).block(Block::default().title("Input").borders(Borders::ALL));
         f.render_widget(input_block, chunks_right[1]);
+
+        f.render_widget(render_logs(), c[1]);
 
         // Render cursor
         match state.focus {

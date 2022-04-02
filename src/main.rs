@@ -5,6 +5,7 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
+use log::{debug, LevelFilter};
 use tokio::{
     sync::{mpsc, watch},
     time::sleep,
@@ -26,6 +27,9 @@ async fn main() -> Result<(), anyhow::Error> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
+    tui_logger::init_logger(LevelFilter::Debug).unwrap();
+    tui_logger::set_default_level(LevelFilter::Debug);
+
     let tags = util::get_id3s().await?;
 
     let mut screen_state = ScreenState::Main;
@@ -40,6 +44,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     // Input thread
     tokio::spawn(async move {
+        debug!("Started input thread");
         loop {
             if event::poll(Duration::from_millis(200)).unwrap() {
                 if let Event::Key(key) = event::read().unwrap() {
@@ -54,6 +59,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     // Timer thread
     tokio::spawn(async move {
+        debug!("Started timer thread");
         loop {
             sleep(Duration::from_millis(200)).await;
             timer_tx.send(()).await.unwrap();
