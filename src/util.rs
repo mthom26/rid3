@@ -2,7 +2,9 @@ use std::path::PathBuf;
 
 use id3::Tag;
 
-pub async fn get_id3s() -> Result<Vec<(PathBuf, Tag)>, anyhow::Error> {
+use crate::state::main_state::Entry;
+
+pub async fn get_id3s() -> Result<Vec<Entry>, anyhow::Error> {
     let tags = [
         "test-files/test.mp3",
         "test-files/test2.mp3",
@@ -10,7 +12,7 @@ pub async fn get_id3s() -> Result<Vec<(PathBuf, Tag)>, anyhow::Error> {
     ]
     .iter()
     .map(|p| {
-        (
+        Entry::new(
             PathBuf::from(p),
             Tag::read_from_path(p).expect("Could not read Tag"),
         )

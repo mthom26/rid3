@@ -13,13 +13,29 @@ pub enum Focus {
     Input,
 }
 
+pub struct Entry {
+    pub path: PathBuf,
+    pub tag: Tag,
+    pub selected: bool,
+}
+
+impl Entry {
+    pub fn new(path: PathBuf, tag: Tag) -> Self {
+        Self {
+            path,
+            tag,
+            selected: false,
+        }
+    }
+}
+
 // TODO
 // - Check for duplicate Paths when adding new entries
 pub struct MainState {
     pub focus: Focus,
 
     pub files_state: ListState,
-    pub files: Vec<(PathBuf, Tag)>,
+    pub files: Vec<Entry>,
 
     pub details_state: ListState,
     // pub details: Vec<String>,
@@ -29,7 +45,7 @@ pub struct MainState {
 }
 
 impl MainState {
-    pub fn new(initial_tags: Vec<(PathBuf, Tag)>) -> Self {
+    pub fn new(initial_tags: Vec<Entry>) -> Self {
         Self {
             focus: Focus::Files,
             files_state: ListState::default(),
@@ -74,7 +90,7 @@ impl MainState {
     fn update_details(&mut self) {
         let index = self.files_state.selected().unwrap(); // This shouldn't fail right?
         let mut new_details = vec![];
-        for frame in self.files[index].1.frames() {
+        for frame in self.files[index].tag.frames() {
             // Only handle text frames
             if frame.id().starts_with("T") {
                 // Don't handle user defined text frames
@@ -124,7 +140,7 @@ impl MainState {
                         let id = self.details[j].id();
                         let new_frame = Frame::text(id, &self.input);
                         self.details[j] = new_frame.clone();
-                        self.files[i].1.add_frame(new_frame);
+                        self.files[i].tag.add_frame(new_frame);
                     }
                     _ => {}
                 }
@@ -191,14 +207,14 @@ impl MainState {
         self.details_state = ListState::default();
     }
 
-    pub fn add_files(&mut self, files: &mut Vec<(PathBuf, Tag)>) {
+    pub fn add_files(&mut self, files: &mut Vec<Entry>) {
         self.files.append(files);
     }
 
     // Write updated tags to files
     fn write_tags(&mut self) -> Result<(), anyhow::Error> {
-        for (path, tag) in self.files.iter() {
-            tag.write_to_path(path, Version::Id3v24)?;
+        for entry in self.files.iter() {
+            entry.tag.write_to_path(&entry.path, Version::Id3v24)?;
         }
 
         Ok(())

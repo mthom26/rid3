@@ -39,7 +39,7 @@ where
             .files
             .iter()
             .map(|item| {
-                let text = match item.0.to_str() {
+                let text = match item.path.to_str() {
                     Some(t) => t
                         .split("/")
                         .last()

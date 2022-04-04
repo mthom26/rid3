@@ -1,12 +1,13 @@
 use std::{
     fs::{self, DirEntry},
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 use id3::Tag;
 
 pub mod files_state;
 pub mod main_state;
+use main_state::Entry;
 
 pub enum ScreenState {
     Main,
@@ -16,18 +17,18 @@ pub enum ScreenState {
 pub enum AppEvent {
     None,
     Quit,
-    AddFiles(Vec<(PathBuf, Tag)>),
+    AddFiles(Vec<Entry>),
     NewScreenState(ScreenState),
     ToggleHelp,
     HideHelp,
 }
 
 // Get a Vec of (Path, Tags) from a Vec of DirEntrys
-fn get_tags(entries: &Vec<DirEntry>) -> Result<Vec<(PathBuf, Tag)>, anyhow::Error> {
+fn get_tags(entries: &Vec<DirEntry>) -> Result<Vec<Entry>, anyhow::Error> {
     let tags = entries
         .iter()
         .filter_map(|entry| match entry.path().is_dir() {
-            false => Some((
+            false => Some(Entry::new(
                 entry.path(),
                 Tag::read_from_path(entry.path()).expect("Could not read Tag"),
             )),
