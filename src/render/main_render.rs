@@ -38,8 +38,8 @@ where
             .files
             .iter()
             .map(|item| {
-                let text = match item.1.title() {
-                    Some(t) => t,
+                let text = match item.0.to_str() {
+                    Some(t) => t.split("/").last().unwrap_or("!Problem unwrapping filename!"),
                     None => "!Unknown Artist!",
                 };
                 ListItem::new(text).style(Style::default().fg(Color::LightGreen))
