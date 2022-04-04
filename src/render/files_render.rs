@@ -1,11 +1,11 @@
 use tui::{
     backend::Backend,
-    style::{Color, Modifier, Style},
+    style::{Color, Style},
     terminal::Terminal,
     widgets::{Block, Borders, List, ListItem},
 };
 
-use crate::render::help_render::render_help;
+use crate::render::{help_render::render_help, inactive_list_item};
 use crate::state::files_state::FilesState;
 
 const HELP_TEXT: [&str; 3] = ["Files Help", "TODO", "Add hotkeys relevant to files screen"];
@@ -28,16 +28,18 @@ where
                 .into_string()
                 .expect("Could not parse OsString");
 
-            items.push(ListItem::new(text).style(Style::default().fg(Color::LightGreen)));
+            let style = if entry.file_type().unwrap().is_dir() {
+                Style::default().fg(Color::LightBlue)
+            } else {
+                Style::default().fg(Color::LightGreen)
+            };
+
+            items.push(ListItem::new(text).style(style));
         }
 
         let block = List::new(items)
             .block(Block::default().title("Files").borders(Borders::ALL))
-            .highlight_style(
-                Style::default()
-                    .bg(Color::DarkGray)
-                    .add_modifier(Modifier::BOLD),
-            );
+            .highlight_style(inactive_list_item());
 
         f.render_stateful_widget(block, size, &mut state.files_state);
 

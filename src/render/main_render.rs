@@ -1,14 +1,15 @@
-use id3::TagLike;
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
+    style::{Color, Style},
     terminal::Terminal,
     text::Span,
     widgets::{Block, Borders, List, ListItem, Paragraph},
 };
 
-use crate::render::{help_render::render_help, logs_render::render_logs};
+use crate::render::{
+    active_list_item, help_render::render_help, inactive_list_item, logs_render::render_logs,
+};
 use crate::state::main_state::{Focus, MainState};
 
 const HELP_TEXT: [&str; 3] = ["Main Help", "TODO", "Add hotkeys relevant to main screen"];
@@ -39,7 +40,10 @@ where
             .iter()
             .map(|item| {
                 let text = match item.0.to_str() {
-                    Some(t) => t.split("/").last().unwrap_or("!Problem unwrapping filename!"),
+                    Some(t) => t
+                        .split("/")
+                        .last()
+                        .unwrap_or("!Problem unwrapping filename!"),
                     None => "!Unknown Artist!",
                 };
                 ListItem::new(text).style(Style::default().fg(Color::LightGreen))
@@ -47,12 +51,11 @@ where
             .collect();
 
         let left_block = List::new(items)
-            .block(Block::default().title("Left").borders(Borders::ALL))
-            .highlight_style(
-                Style::default()
-                    .bg(Color::DarkGray)
-                    .add_modifier(Modifier::BOLD),
-            );
+            .block(Block::default().title("Files").borders(Borders::ALL))
+            .highlight_style(match state.focus {
+                Focus::Files => active_list_item(),
+                _ => inactive_list_item(),
+            });
 
         f.render_stateful_widget(left_block, chunks[0], &mut state.files_state);
 
@@ -70,12 +73,11 @@ where
             })
             .collect();
         let right_block = List::new(right_items)
-            .block(Block::default().title("Left").borders(Borders::ALL))
-            .highlight_style(
-                Style::default()
-                    .bg(Color::DarkGray)
-                    .add_modifier(Modifier::BOLD),
-            );
+            .block(Block::default().title("Details").borders(Borders::ALL))
+            .highlight_style(match state.focus {
+                Focus::Details => active_list_item(),
+                _ => inactive_list_item(),
+            });
         f.render_stateful_widget(right_block, chunks_right[0], &mut state.details_state);
 
         let text = Span::raw(&state.input);
