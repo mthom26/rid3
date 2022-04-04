@@ -2,11 +2,13 @@ use std::path::PathBuf;
 
 use crossterm::event::{KeyCode, KeyEvent};
 use id3::{Frame, Tag, TagLike, Version};
+use log::debug;
 use tui::widgets::ListState;
 
 use crate::state::{update_screen_state, AppEvent};
 use crate::util;
 
+#[derive(PartialEq, Eq)]
 pub enum Focus {
     Files,
     Details,
@@ -76,6 +78,16 @@ impl MainState {
                 KeyCode::Char('c') => self.clear_files(),
                 KeyCode::Char('w') => self.write_tags().expect("Could not write tags"),
                 KeyCode::Char('h') => return AppEvent::ToggleHelp,
+                KeyCode::Char('s') => {
+                    if self.focus == Focus::Files {
+                        self.select_entry()
+                    }
+                }
+                KeyCode::Char('a') => {
+                    if self.focus == Focus::Files {
+                        self.select_all_entries()
+                    }
+                }
                 KeyCode::Char(c) => return update_screen_state(c),
                 KeyCode::Up => self.prev(),
                 KeyCode::Down => self.next(),
@@ -218,5 +230,34 @@ impl MainState {
         }
 
         Ok(())
+    }
+
+    // Toggle selection of highlighted entry
+    fn select_entry(&mut self) {
+        match self.files_state.selected() {
+            Some(i) => {
+                self.files[i].selected = !self.files[i].selected;
+                debug!(
+                    "{:?} selected: {}",
+                    self.files[i].path, self.files[i].selected
+                );
+            }
+            None => {}
+        }
+    }
+
+    // Select all files in list, if all are already selected then deselect them
+    fn select_all_entries(&mut self) {
+        let mut any_unselected = false;
+        for entry in &self.files {
+            if !entry.selected {
+                any_unselected = true;
+                break;
+            }
+        }
+        for entry in &mut self.files {
+            entry.selected = any_unselected;
+        }
+        debug!("All selected: {}", any_unselected);
     }
 }
