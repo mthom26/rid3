@@ -1,11 +1,12 @@
 use tui::{
     backend::Backend,
+    layout::{Constraint, Direction, Layout},
     style::{Color, Style},
     terminal::Terminal,
     widgets::{Block, Borders, List, ListItem},
 };
 
-use crate::render::{help_render::render_help, inactive_list_item};
+use crate::render::{help_render::render_help, inactive_list_item, logs_render::render_logs};
 use crate::state::files_state::FilesState;
 
 const HELP_TEXT: [&str; 3] = ["Files Help", "TODO", "Add hotkeys relevant to files screen"];
@@ -20,6 +21,11 @@ where
 {
     terminal.draw(|f| {
         let size = f.size();
+
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Min(0), Constraint::Length(10)].as_ref())
+            .split(size);
 
         let mut items = vec![ListItem::new("../").style(Style::default().fg(Color::LightGreen))];
         for entry in state.files.iter() {
@@ -41,7 +47,8 @@ where
             .block(Block::default().title("Files").borders(Borders::ALL))
             .highlight_style(inactive_list_item());
 
-        f.render_stateful_widget(block, size, &mut state.files_state);
+        f.render_stateful_widget(block, chunks[0], &mut state.files_state);
+        f.render_widget(render_logs(), chunks[1]);
 
         if show_help {
             render_help(f, &HELP_TEXT);
