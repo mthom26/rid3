@@ -3,7 +3,7 @@ use std::{env, fs, path::PathBuf};
 use crossterm::event::{KeyCode, KeyEvent};
 use tui::widgets::ListState;
 
-use crate::state::{get_entries, get_tags, update_screen_state, AppEvent};
+use crate::state::{get_entries, get_tag, get_tags, update_screen_state, AppEvent};
 use crate::util;
 
 pub struct FilesState {
@@ -30,6 +30,8 @@ impl FilesState {
         match key.code {
             KeyCode::Char('q') => return AppEvent::Quit,
             KeyCode::Char('a') => return self.add_all_files().expect("Could not add files"),
+            KeyCode::Char('s') => return self.add_file().expect("Could not add file"),
+            KeyCode::Char('b') => self.parent_dir().expect("Could not enter parent directory"),
             KeyCode::Char('h') => return AppEvent::ToggleHelp,
             KeyCode::Char(c) => return update_screen_state(c),
             KeyCode::Up => self.prev(),
@@ -96,13 +98,21 @@ impl FilesState {
     }
 
     // Append selected file to MainState files
-    fn add_file() {
-        // TODO
+    fn add_file(&mut self) -> Result<AppEvent, anyhow::Error> {
+        match self.files_state.selected().unwrap() {
+            0 => Ok(AppEvent::None),
+            i => {
+                // `self.files` has one less item than `self.files_state` so
+                // need to subtract one from index here
+                let tag = get_tag(&self.files[i - 1])?;
+                Ok(AppEvent::AddFiles(tag))
+            }
+        }
     }
 
     // Append all files to MainState files
     fn add_all_files(&mut self) -> Result<AppEvent, anyhow::Error> {
-        let tags = get_tags(&self.files)?;
+        let tags = get_tags(&self.files[..])?;
         Ok(AppEvent::AddFiles(tags))
     }
 }

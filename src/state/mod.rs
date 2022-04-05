@@ -24,7 +24,7 @@ pub enum AppEvent {
 }
 
 // Get a Vec of (Path, Tags) from a Vec of DirEntrys
-fn get_tags(entries: &Vec<DirEntry>) -> Result<Vec<Entry>, anyhow::Error> {
+fn get_tags(entries: &[DirEntry]) -> Result<Vec<Entry>, anyhow::Error> {
     let tags = entries
         .iter()
         .filter_map(|entry| match entry.path().is_dir() {
@@ -37,6 +37,18 @@ fn get_tags(entries: &Vec<DirEntry>) -> Result<Vec<Entry>, anyhow::Error> {
         .collect();
 
     Ok(tags)
+}
+
+// Get a Vec of (Path, Tags) from a DirEntry, returning a Vec here for convenience
+fn get_tag(entry: &DirEntry) -> Result<Vec<Entry>, anyhow::Error> {
+    if entry.path().is_dir() {
+        Ok(vec![])
+    } else {
+        Ok(vec![Entry::new(
+            entry.path(),
+            Tag::read_from_path(entry.path()).expect("Could not read Tag"),
+        )])
+    }
 }
 
 // Get a Vec of DirEntrys from a Path, filters out everything except .mp3 and other directories
