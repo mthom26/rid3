@@ -5,6 +5,10 @@ pub mod help_render;
 pub mod logs_render;
 pub mod main_render;
 
+pub fn list_item() -> Style {
+    Style::default().fg(Color::LightGreen)
+}
+
 // Style for currently focused selected list item
 pub fn active_list_item() -> Style {
     Style::default()

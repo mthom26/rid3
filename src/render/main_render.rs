@@ -8,7 +8,8 @@ use tui::{
 };
 
 use crate::render::{
-    active_list_item, help_render::render_help, inactive_list_item, logs_render::render_logs,
+    active_list_item, help_render::render_help, inactive_list_item, list_item,
+    logs_render::render_logs,
 };
 use crate::state::main_state::{Focus, MainState};
 
@@ -46,7 +47,10 @@ where
                         .unwrap_or("!Problem unwrapping filename!"),
                     None => "!Unknown Artist!",
                 };
-                ListItem::new(text).style(Style::default().fg(Color::LightGreen))
+                ListItem::new(text).style(match item.selected {
+                    true => inactive_list_item(),
+                    false => list_item(),
+                })
             })
             .collect();
 
