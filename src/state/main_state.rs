@@ -15,6 +15,7 @@ pub enum Focus {
     Input,
 }
 
+#[derive(Clone)]
 pub struct Entry {
     pub path: PathBuf,
     pub tag: Tag,
@@ -75,7 +76,7 @@ impl MainState {
             },
             _ => match key.code {
                 KeyCode::Char('q') => return AppEvent::Quit,
-                KeyCode::Char('c') => self.clear_files(),
+                KeyCode::Char('c') => self.remove_all_files(),
                 KeyCode::Char('w') => self.write_tags().expect("Could not write tags"),
                 KeyCode::Char('h') => return AppEvent::ToggleHelp,
                 KeyCode::Char('s') => {
@@ -91,6 +92,8 @@ impl MainState {
                 KeyCode::Char('d') => {
                     if self.focus == Focus::Details {
                         self.remove_frame();
+                    } else if self.focus == Focus::Files {
+                        self.remove_files();
                     }
                 }
                 KeyCode::Char(c) => return update_screen_state(c),
@@ -178,7 +181,7 @@ impl MainState {
     fn remove_frame(&mut self) {
         let id = match self.details_state.selected() {
             Some(i) => self.details[i].id(),
-            _ => unreachable!()
+            _ => unreachable!(),
         };
 
         for file in &mut self.files {
@@ -241,11 +244,21 @@ impl MainState {
         }
     }
 
-    fn clear_files(&mut self) {
+    fn remove_all_files(&mut self) {
         self.files.clear();
         self.details.clear();
         self.files_state = ListState::default();
         self.details_state = ListState::default();
+    }
+
+    // Remove all selected files
+    fn remove_files(&mut self) {
+        self.files = self
+            .files
+            .iter()
+            .filter(|file| !file.selected)
+            .map(|file| file.clone())
+            .collect();
     }
 
     pub fn add_files(&mut self, files: &mut Vec<Entry>) {
