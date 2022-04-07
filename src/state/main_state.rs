@@ -145,23 +145,28 @@ impl MainState {
     }
 
     fn set_input(&mut self) {
-        match self.files_state.selected() {
+        let new_frame = match self.details_state.selected() {
             Some(i) => {
-                match self.details_state.selected() {
-                    Some(j) => {
-                        let id = self.details[j].id();
-                        let new_frame = Frame::text(id, &self.input);
-                        self.details[j] = new_frame.clone();
-                        self.files[i].tag.add_frame(new_frame);
-                    }
-                    _ => {}
-                }
-                self.input = "".to_string();
-                self.focus = Focus::Details;
-                self.update_details();
+                let id = self.details[i].id();
+                let new_frame = Frame::text(id, &self.input);
+                self.details[i] = new_frame.clone();
+                new_frame
             }
-            None => {}
+            _ => unreachable!(),
+        };
+
+        for file in &mut self.files {
+            if file.selected {
+                file.tag.add_frame(new_frame.clone());
+            }
         }
+        if let Some(i) = self.files_state.selected() {
+            self.files[i].tag.add_frame(new_frame);
+        }
+
+        self.input = "".to_string();
+        self.focus = Focus::Details;
+        self.update_details();
     }
 
     fn next(&mut self) {
