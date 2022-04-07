@@ -88,6 +88,11 @@ impl MainState {
                         self.select_all_entries()
                     }
                 }
+                KeyCode::Char('d') => {
+                    if self.focus == Focus::Details {
+                        self.remove_frame();
+                    }
+                }
                 KeyCode::Char(c) => return update_screen_state(c),
                 KeyCode::Up => self.prev(),
                 KeyCode::Down => self.next(),
@@ -166,6 +171,25 @@ impl MainState {
 
         self.input = "".to_string();
         self.focus = Focus::Details;
+        self.update_details();
+    }
+
+    // Remove selected frame from all selected files
+    fn remove_frame(&mut self) {
+        let id = match self.details_state.selected() {
+            Some(i) => self.details[i].id(),
+            _ => unreachable!()
+        };
+
+        for file in &mut self.files {
+            if file.selected {
+                file.tag.remove(id);
+            }
+        }
+        if let Some(i) = self.files_state.selected() {
+            self.files[i].tag.remove(id);
+        }
+
         self.update_details();
     }
 
