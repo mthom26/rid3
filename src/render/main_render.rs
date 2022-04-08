@@ -1,7 +1,6 @@
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout},
-    style::{Color, Style},
     terminal::Terminal,
     text::Span,
     widgets::{Block, Borders, List, ListItem, Paragraph},
@@ -68,14 +67,16 @@ where
             .constraints([Constraint::Min(0), Constraint::Length(3)].as_ref())
             .split(chunks[1]);
 
-        let right_items: Vec<ListItem> = state
-            .details
-            .iter()
-            .map(|item| {
-                let text = format!("| {}\n| {}\n", item.name(), item.content());
-                ListItem::new(text).style(Style::default().fg(Color::LightGreen))
-            })
-            .collect();
+        let filename = format!("| Filename\n| {}\n", state.details_filename);
+        let mut right_items = vec![ListItem::new(filename).style(list_item())];
+
+        for item in state.details.iter().map(|item| {
+            let text = format!("| {}\n| {}\n", item.name(), item.content());
+            ListItem::new(text).style(list_item())
+        }) {
+            right_items.push(item);
+        }
+
         let right_block = List::new(right_items)
             .block(Block::default().title("Details").borders(Borders::ALL))
             .highlight_style(match state.focus {

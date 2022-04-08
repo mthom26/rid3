@@ -18,14 +18,24 @@ pub enum Focus {
 #[derive(Clone)]
 pub struct Entry {
     pub path: PathBuf,
+    pub filename: String,
     pub tag: Tag,
     pub selected: bool,
 }
 
 impl Entry {
     pub fn new(path: PathBuf, tag: Tag) -> Self {
+        let filename = path
+            .to_str()
+            .unwrap()
+            .split("/")
+            .last()
+            .unwrap()
+            .to_string();
+
         Self {
             path,
+            filename,
             tag,
             selected: false,
         }
@@ -40,8 +50,12 @@ pub struct MainState {
     pub files_state: ListState,
     pub files: Vec<Entry>,
 
+    // TODO - `details_state` is longer than `details` so when setting input,
+    //        removing frames, etc. this has to be taken into account when indexing
+    //        into the relevant vectors. This is cumbersome and if changed again
+    //        will need to be fixed. Should be a better way to do it...
+    pub details_filename: String,
     pub details_state: ListState,
-    // pub details: Vec<String>,
     pub details: Vec<Frame>,
 
     pub input: String,
@@ -53,6 +67,7 @@ impl MainState {
             focus: Focus::Files,
             files_state: ListState::default(),
             files: initial_tags,
+            details_filename: String::new(),
             details_state: ListState::default(),
             details: vec![
                 // "| Title\n| ".to_string(),
@@ -109,6 +124,9 @@ impl MainState {
 
     fn update_details(&mut self) {
         let index = self.files_state.selected().unwrap(); // This shouldn't fail right?
+
+        self.details_filename = self.files[index].filename.clone();
+
         let mut new_details = vec![];
         for frame in self.files[index].tag.frames() {
             // Only handle text frames
@@ -122,7 +140,7 @@ impl MainState {
         self.details = new_details;
         // Check old `details_state` isn't referring to an index outside `new_details` length
         if let Some(i) = self.details_state.selected() {
-            if self.details.len() - 1 < i {
+            if self.details.len() - 2 < i {
                 self.details_state.select(Some(0));
             }
         }
@@ -153,11 +171,24 @@ impl MainState {
     }
 
     fn set_input(&mut self) {
+        // If index is 0 here the filename is highlighted so handle
+        // it and return early
+        if let Some(0) = self.details_state.selected() {
+            if let Some(i) = self.files_state.selected() {
+                self.files[i].filename = self.input.clone();
+            }
+
+            self.input = "".to_string();
+            self.focus = Focus::Details;
+            self.update_details();
+            return;
+        }
+
         let new_frame = match self.details_state.selected() {
             Some(i) => {
-                let id = self.details[i].id();
+                let id = self.details[i - 1].id();
                 let new_frame = Frame::text(id, &self.input);
-                self.details[i] = new_frame.clone();
+                self.details[i - 1] = new_frame.clone();
                 new_frame
             }
             _ => unreachable!(),
@@ -180,7 +211,11 @@ impl MainState {
     // Remove selected frame from all selected files
     fn remove_frame(&mut self) {
         let id = match self.details_state.selected() {
-            Some(i) => self.details[i].id(),
+            Some(0) => {
+                debug!("Not a frame");
+                return;
+            }
+            Some(i) => self.details[i - 1].id(),
             _ => unreachable!(),
         };
 
@@ -211,7 +246,7 @@ impl MainState {
             }
             Focus::Details => {
                 let i = match self.details_state.selected() {
-                    Some(i) => util::next(i, self.details.len()),
+                    Some(i) => util::next(i, self.details.len() + 1),
                     None => 0,
                 };
                 self.details_state.select(Some(i));
@@ -235,7 +270,7 @@ impl MainState {
             }
             Focus::Details => {
                 let i = match self.details_state.selected() {
-                    Some(i) => util::prev(i, self.details.len()),
+                    Some(i) => util::prev(i, self.details.len() + 1),
                     None => 0,
                 };
                 self.details_state.select(Some(i));
