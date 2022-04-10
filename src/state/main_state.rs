@@ -140,7 +140,7 @@ impl MainState {
         self.details = new_details;
         // Check old `details_state` isn't referring to an index outside `new_details` length
         if let Some(i) = self.details_state.selected() {
-            if self.details.len() - 2 < i {
+            if self.details.len() < i {
                 self.details_state.select(Some(0));
             }
         }
