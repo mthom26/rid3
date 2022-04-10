@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 
 use crossterm::event::{KeyCode, KeyEvent};
 use id3::{Frame, Tag, TagLike, Version};
@@ -302,8 +302,15 @@ impl MainState {
 
     // Write updated tags to files
     fn write_tags(&mut self) -> Result<(), anyhow::Error> {
-        for entry in self.files.iter() {
+        for entry in self.files.iter_mut() {
             entry.tag.write_to_path(&entry.path, Version::Id3v24)?;
+
+            // Rename the file, for now the extension must be included
+            // when the user enters the new filename
+            let mut new_path = entry.path.clone();
+            new_path.set_file_name(&entry.filename);
+            fs::rename(&entry.path, &new_path)?;
+            entry.path = new_path;
         }
 
         Ok(())
