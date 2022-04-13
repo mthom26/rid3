@@ -6,6 +6,7 @@ use std::{
 use id3::Tag;
 
 pub mod files_state;
+pub mod frame_data;
 pub mod frames_state;
 pub mod main_state;
 use main_state::Entry;
@@ -23,6 +24,7 @@ pub enum AppEvent {
     NewScreenState(ScreenState),
     ToggleHelp,
     HideHelp,
+    AddFrame(&'static str),
 }
 
 // Get a Vec of (Path, Tags) from a Vec of DirEntrys

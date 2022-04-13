@@ -8,7 +8,7 @@ use tui::{
 use crate::render::{
     help_render::render_help, inactive_list_item, list_item, logs_render::render_logs,
 };
-use crate::state::frames_state::FramesState;
+use crate::state::{frame_data::SUPPORTED_FRAMES, frames_state::FramesState};
 
 const HELP_TEXT: [&str; 3] = [
     "Frames Help",
@@ -37,10 +37,9 @@ where
             .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
             .split(chunks[0]);
 
-        let frames: Vec<ListItem> = state
-            .frames
+        let frames: Vec<ListItem> = SUPPORTED_FRAMES
             .iter()
-            .map(|frame| ListItem::new(*frame).style(list_item()))
+            .map(|frame| ListItem::new(frame.name).style(list_item()))
             .collect();
 
         let frames_block = List::new(frames)

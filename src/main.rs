@@ -105,6 +105,7 @@ async fn main() -> Result<(), anyhow::Error> {
                         AppEvent::NewScreenState(s) => screen_state = s,
                         AppEvent::ToggleHelp => show_help = !show_help,
                         AppEvent::HideHelp => show_help = false,
+                        AppEvent::AddFrame(id) => main_state.add_frame(id),
                         _ => {}
                     }
                 }

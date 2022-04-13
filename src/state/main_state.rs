@@ -232,6 +232,24 @@ impl MainState {
         self.update_details();
     }
 
+    pub fn add_frame(&mut self, id: &str) {
+        debug!("Adding frame {}", id);
+        let frame = Frame::text(id, "");
+
+        for entry in self.files.iter_mut() {
+            if entry.selected {
+                // TODO - Check if frame already exists, if it does
+                //        don't overwrite existing content
+                entry.tag.add_frame(frame.clone());
+            }
+        }
+        if let Some(i) = self.files_state.selected() {
+            self.files[i].tag.add_frame(frame);
+        }
+
+        self.update_details();
+    }
+
     fn next(&mut self) {
         if self.files.is_empty() {
             return;
