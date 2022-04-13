@@ -15,8 +15,11 @@ use tui::{backend::CrosstermBackend, Terminal};
 mod render;
 mod state;
 mod util;
-use render::{files_render::render_files, main_render::render_main};
-use state::{files_state::FilesState, main_state::MainState, AppEvent, ScreenState};
+use render::{files_render::render_files, frames_render::render_frames, main_render::render_main};
+use state::{
+    files_state::FilesState, frames_state::FramesState, main_state::MainState, AppEvent,
+    ScreenState,
+};
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -36,6 +39,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut show_help = false;
     let mut main_state = MainState::new(tags);
     let mut files_state = FilesState::new()?;
+    let mut frames_state = FramesState::new();
 
     let (input_tx, mut input_rx) = mpsc::channel(32);
     let (timer_tx, mut timer_rx) = mpsc::channel(32);
@@ -74,6 +78,7 @@ async fn main() -> Result<(), anyhow::Error> {
         match screen_state {
             ScreenState::Main => render_main(&mut terminal, &mut main_state, show_help)?,
             ScreenState::Files => render_files(&mut terminal, &mut files_state, show_help)?,
+            ScreenState::Frames => render_frames(&mut terminal, &mut frames_state, show_help)?,
         }
 
         tokio::select! {
@@ -95,6 +100,13 @@ async fn main() -> Result<(), anyhow::Error> {
                         AppEvent::HideHelp => show_help = false,
                         _ => {}
                     },
+                    ScreenState::Frames => match frames_state.handle_input(&key) {
+                        AppEvent::Quit => break,
+                        AppEvent::NewScreenState(s) => screen_state = s,
+                        AppEvent::ToggleHelp => show_help = !show_help,
+                        AppEvent::HideHelp => show_help = false,
+                        _ => {}
+                    }
                 }
             }
             _ = timer_rx.recv() => { /* Nothing to do, just proceed to next loop iteration */ }

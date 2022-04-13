@@ -111,6 +111,7 @@ impl MainState {
                         self.remove_files();
                     }
                 }
+                KeyCode::Char('f') => return update_screen_state('3'),
                 KeyCode::Char(c) => return update_screen_state(c),
                 KeyCode::Up => self.prev(),
                 KeyCode::Down => self.next(),
