@@ -1,11 +1,11 @@
 use std::{fs, path::PathBuf};
 
 use crossterm::event::{KeyCode, KeyEvent};
-use id3::{Frame, Tag, TagLike, Version};
+use id3::{Content, Frame, Tag, TagLike, Version};
 use log::debug;
 use tui::widgets::ListState;
 
-use crate::state::{update_screen_state, AppEvent};
+use crate::state::{frame_data::id_to_name, update_screen_state, AppEvent};
 use crate::util;
 
 #[derive(PartialEq, Eq)]
@@ -112,6 +112,7 @@ impl MainState {
                     }
                 }
                 KeyCode::Char('f') => return update_screen_state('3'),
+                KeyCode::Char('u') => self.update_filenames(),
                 KeyCode::Char(c) => return update_screen_state(c),
                 KeyCode::Up => self.prev(),
                 KeyCode::Down => self.next(),
@@ -363,4 +364,64 @@ impl MainState {
         }
         debug!("All selected: {}", any_unselected);
     }
+
+    // Temporary function to update the entry filename with the track number
+    // and title
+    fn update_filenames(&mut self) {
+        for entry in self.files.iter_mut() {
+            if entry.selected {
+                let frames = get_frames(&entry.tag);
+                let mut track_num = "".to_string();
+                let mut title = "".to_string();
+
+                for (name, content) in frames.iter() {
+                    match &name[..] {
+                        "Title" => title = content.clone(),
+                        "Track" => track_num = content.clone(),
+                        _ => {}
+                    }
+                }
+
+                let track_num = if track_num.len() < 2 {
+                    // Add a leading zero if necessary
+                    format!("0{}", track_num)
+                } else {
+                    track_num
+                };
+
+                if track_num.is_empty() {
+                    debug!("Track number frame was empty, not renaming file");
+                    continue;
+                }
+                if title.is_empty() {
+                    debug!("Title frame was empty, not renaming file");
+                    continue;
+                }
+
+                let new_filename = format!("{} {}.mp3", track_num, title);
+                entry.filename = new_filename;
+            }
+        }
+        self.update_details();
+    }
+}
+
+fn get_frames(tag: &Tag) -> Vec<(String, String)> {
+    let mut frames = vec![];
+    for frame in tag.frames() {
+        let name = if let Ok(name) = id_to_name(frame.id()) {
+            name
+        } else {
+            debug!("Skipping frame");
+            continue;
+        };
+
+        let text: String = match frame.content() {
+            Content::Text(txt) => txt.clone(),
+            _ => unreachable!(),
+        };
+        frames.push((name, text));
+    }
+
+    frames
 }
