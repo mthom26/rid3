@@ -1,7 +1,7 @@
 use log::debug;
 
 // Frames that are currently supported by the program
-pub static SUPPORTED_FRAMES: [FrameData; 4] = [
+pub static SUPPORTED_FRAMES: [FrameData; 5] = [
     FrameData {
         name: "Title",
         id: "TIT2",
@@ -22,6 +22,11 @@ pub static SUPPORTED_FRAMES: [FrameData; 4] = [
         id: "TRCK",
         description: "Track number",
     },
+    FrameData {
+        name: "Date",
+        id: "TDRC",
+        description: "Recording Time",
+    },
 ];
 
 #[derive(Debug, Clone, Copy)]
@@ -38,6 +43,7 @@ pub fn id_to_name(id: &str) -> Result<String, String> {
         "TALB" => Ok("Album".to_string()),
         "TPE1" => Ok("Artist".to_string()),
         "TRCK" => Ok("Track".to_string()),
+        "TDRC" => Ok("Date".to_string()),
         _ => Err("Frame not supported".to_string()),
     }
 }
