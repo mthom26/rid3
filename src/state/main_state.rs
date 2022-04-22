@@ -125,7 +125,13 @@ impl MainState {
     }
 
     fn update_details(&mut self) {
-        let index = self.files_state.selected().unwrap(); // This shouldn't fail right?
+        let index = match self.files_state.selected() {
+            Some(i) => i,
+            None => {
+                debug!("files_state not selected");
+                return;
+            }
+        };
 
         self.details_filename = self.files[index].filename.clone();
 
