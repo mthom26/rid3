@@ -5,6 +5,7 @@ use tui::{
     terminal::Terminal,
     widgets::{Block, Borders, List, ListItem},
 };
+use tui_logger::TuiWidgetState;
 
 use crate::render::{help_render::render_help, inactive_list_item, logs_render::render_logs};
 use crate::state::files_state::FilesState;
@@ -15,6 +16,7 @@ pub fn render_files<B>(
     terminal: &mut Terminal<B>,
     state: &mut FilesState,
     show_help: bool,
+    logger_state: &TuiWidgetState,
 ) -> Result<(), anyhow::Error>
 where
     B: Backend,
@@ -48,7 +50,10 @@ where
             .highlight_style(inactive_list_item());
 
         f.render_stateful_widget(block, chunks[0], &mut state.files_state);
-        f.render_widget(render_logs(), chunks[1]);
+
+        let mut log_widget = render_logs();
+        log_widget.state(logger_state);
+        f.render_widget(log_widget, chunks[1]);
 
         if show_help {
             render_help(f, &HELP_TEXT);

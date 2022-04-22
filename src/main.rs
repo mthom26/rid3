@@ -1,7 +1,7 @@
 use std::{io, time::Duration};
 
 use crossterm::{
-    event::{self, Event},
+    event::{self, Event, KeyCode},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
@@ -11,6 +11,7 @@ use tokio::{
     time::sleep,
 };
 use tui::{backend::CrosstermBackend, Terminal};
+use tui_logger::{TuiWidgetEvent, TuiWidgetState};
 
 mod render;
 mod state;
@@ -40,6 +41,8 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut main_state = MainState::new(tags);
     let mut files_state = FilesState::new()?;
     let mut frames_state = FramesState::new();
+
+    let mut logger_state = TuiWidgetState::new();
 
     let (input_tx, mut input_rx) = mpsc::channel(32);
     let (timer_tx, mut timer_rx) = mpsc::channel(32);
@@ -76,14 +79,25 @@ async fn main() -> Result<(), anyhow::Error> {
     loop {
         // Render
         match screen_state {
-            ScreenState::Main => render_main(&mut terminal, &mut main_state, show_help)?,
-            ScreenState::Files => render_files(&mut terminal, &mut files_state, show_help)?,
-            ScreenState::Frames => render_frames(&mut terminal, &mut frames_state, show_help)?,
+            ScreenState::Main => {
+                render_main(&mut terminal, &mut main_state, show_help, &logger_state)?
+            }
+            ScreenState::Files => {
+                render_files(&mut terminal, &mut files_state, show_help, &logger_state)?
+            }
+            ScreenState::Frames => {
+                render_frames(&mut terminal, &mut frames_state, show_help, &logger_state)?
+            }
         }
 
         tokio::select! {
             key = input_rx.recv() => {
                 let key = key.unwrap();
+                match key.code {
+                    KeyCode::PageUp => logger_state.transition(&TuiWidgetEvent::PrevPageKey),
+                    KeyCode::PageDown => logger_state.transition(&TuiWidgetEvent::NextPageKey),
+                    _ => {}
+                }
                 match screen_state {
                     ScreenState::Main => match main_state.handle_input(&key) {
                         AppEvent::Quit => break,

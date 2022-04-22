@@ -4,6 +4,7 @@ use tui::{
     terminal::Terminal,
     widgets::{Block, Borders, List, ListItem},
 };
+use tui_logger::TuiWidgetState;
 
 use crate::render::{
     help_render::render_help, inactive_list_item, list_item, logs_render::render_logs,
@@ -20,6 +21,7 @@ pub fn render_frames<B>(
     terminal: &mut Terminal<B>,
     state: &mut FramesState,
     show_help: bool,
+    logger_state: &TuiWidgetState,
 ) -> Result<(), anyhow::Error>
 where
     B: Backend,
@@ -53,7 +55,9 @@ where
 
         f.render_stateful_widget(frames_block, chunks_top[0], &mut state.frames_state);
         f.render_widget(description_block, chunks_top[1]);
-        f.render_widget(render_logs(), chunks[1]);
+        let mut log_widget = render_logs();
+        log_widget.state(logger_state);
+        f.render_widget(log_widget, chunks[1]);
 
         if show_help {
             render_help(f, &HELP_TEXT);

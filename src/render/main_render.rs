@@ -5,6 +5,7 @@ use tui::{
     text::Span,
     widgets::{Block, Borders, List, ListItem, Paragraph},
 };
+use tui_logger::TuiWidgetState;
 
 use crate::render::{
     active_list_item, help_render::render_help, inactive_list_item, list_item,
@@ -18,6 +19,7 @@ pub fn render_main<B>(
     terminal: &mut Terminal<B>,
     state: &mut MainState,
     show_help: bool,
+    logger_state: &TuiWidgetState,
 ) -> Result<(), anyhow::Error>
 where
     B: Backend,
@@ -90,7 +92,9 @@ where
             Paragraph::new(text).block(Block::default().title("Input").borders(Borders::ALL));
         f.render_widget(input_block, chunks_right[1]);
 
-        f.render_widget(render_logs(), c[1]);
+        let mut log_widget = render_logs();
+        log_widget.state(logger_state);
+        f.render_widget(log_widget, c[1]);
 
         // Render cursor
         match state.focus {
