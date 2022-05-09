@@ -10,7 +10,12 @@ use tui_logger::TuiWidgetState;
 use crate::render::{help_render::render_help, inactive_list_item, logs_render::render_logs};
 use crate::state::files_state::FilesState;
 
-const HELP_TEXT: [&str; 3] = ["Files Help", "TODO", "Add hotkeys relevant to files screen"];
+const HELP_TEXT: [&str; 4] = [
+    "`q` - Quit",
+    "`b` - Change to parent directory",
+    "`s` - Add highlighted file",
+    "`a` - Add all files",
+];
 
 pub fn render_files<B>(
     terminal: &mut Terminal<B>,

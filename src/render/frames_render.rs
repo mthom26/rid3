@@ -11,11 +11,7 @@ use crate::render::{
 };
 use crate::state::{frame_data::SUPPORTED_FRAMES, frames_state::FramesState};
 
-const HELP_TEXT: [&str; 3] = [
-    "Frames Help",
-    "TODO",
-    "Add hotkeys relevant to frame select screen",
-];
+const HELP_TEXT: [&str; 2] = ["`q` - Quit", "`a` - Add selected frame"];
 
 pub fn render_frames<B>(
     terminal: &mut Terminal<B>,

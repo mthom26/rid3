@@ -13,7 +13,15 @@ use crate::render::{
 };
 use crate::state::main_state::{Focus, MainState};
 
-const HELP_TEXT: [&str; 3] = ["Main Help", "TODO", "Add hotkeys relevant to main screen"];
+const HELP_TEXT: [&str; 7] = [
+    "`q` - Quit",
+    "`c` - Remove all files",
+    "`d` - Remove selected files/frame",
+    "`s` - Select highlighted file",
+    "`a` - Select/Deselect all files",
+    "`u` - Update file names",
+    "`w` - Write changes",
+];
 
 pub fn render_main<B>(
     terminal: &mut Terminal<B>,
