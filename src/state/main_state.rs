@@ -143,7 +143,10 @@ impl MainState {
                 }
             }
         }
+        // TODO - Customise this sort
+        new_details.sort();
         self.details = new_details;
+
         // Check old `details_state` isn't referring to an index outside `new_details` length
         if let Some(i) = self.details_state.selected() {
             if self.details.len() < i {
@@ -212,6 +215,7 @@ impl MainState {
         self.input = "".to_string();
         self.focus = Focus::Details;
         self.update_details();
+        self.next();
     }
 
     // Remove selected frame from all selected files
@@ -268,14 +272,14 @@ impl MainState {
                 self.files_state.select(Some(i));
                 self.update_details();
             }
-            Focus::Details => {
+            // When input is focused allow next details item to be selected
+            Focus::Details | Focus::Input => {
                 let i = match self.details_state.selected() {
                     Some(i) => util::next(i, self.details.len() + 1),
                     None => 0,
                 };
                 self.details_state.select(Some(i));
             }
-            _ => {}
         }
     }
 
