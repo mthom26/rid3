@@ -2,7 +2,7 @@ use std::{fs, path::PathBuf};
 
 use crossterm::event::{KeyCode, KeyEvent};
 use id3::{Content, Frame, Tag, TagLike, Version};
-use log::debug;
+use log::{debug, warn};
 use tui::widgets::ListState;
 
 use crate::state::{frame_data::id_to_name, update_screen_state, AppEvent};
@@ -42,8 +42,6 @@ impl Entry {
     }
 }
 
-// TODO
-// - Check for duplicate Paths when adding new entries
 pub struct MainState {
     pub focus: Focus,
 
@@ -323,7 +321,16 @@ impl MainState {
     }
 
     pub fn add_files(&mut self, files: &mut Vec<Entry>) {
-        self.files.append(files);
+        'outer: for new_entry in files.iter() {
+            for entry in self.files.iter() {
+                if entry.path == new_entry.path {
+                    warn!("Duplicate path");
+                    continue 'outer;
+                }
+            }
+            // info!("Adding entry");
+            self.files.push(new_entry.clone());
+        }
     }
 
     // Write updated tags to files
