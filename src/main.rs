@@ -34,11 +34,9 @@ async fn main() -> Result<(), anyhow::Error> {
     tui_logger::init_logger(LevelFilter::Debug).unwrap();
     tui_logger::set_default_level(LevelFilter::Debug);
 
-    let tags = util::get_id3s().await?;
-
     let mut screen_state = ScreenState::Main;
     let mut show_help = false;
-    let mut main_state = MainState::new(tags);
+    let mut main_state = MainState::new();
     let mut files_state = FilesState::new()?;
     let mut frames_state = FramesState::new();
 

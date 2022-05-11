@@ -60,18 +60,14 @@ pub struct MainState {
 }
 
 impl MainState {
-    pub fn new(initial_tags: Vec<Entry>) -> Self {
+    pub fn new() -> Self {
         Self {
             focus: Focus::Files,
             files_state: ListState::default(),
-            files: initial_tags,
+            files: vec![],
             details_filename: String::new(),
             details_state: ListState::default(),
-            details: vec![
-                // "| Title\n| ".to_string(),
-                // "| Artist\n| ".to_string(),
-                // "| Album\n| ".to_string(),
-            ],
+            details: vec![],
             input: "".to_string(),
         }
     }
