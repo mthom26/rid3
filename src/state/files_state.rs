@@ -1,10 +1,12 @@
-use std::{cmp::Ordering, env, fs, path::PathBuf};
+use std::{env, fs, path::PathBuf};
 
 use crossterm::event::{KeyCode, KeyEvent};
 use tui::widgets::ListState;
 
-use crate::state::{get_entries, get_tag, get_tags, update_screen_state, AppEvent};
-use crate::util;
+use crate::{
+    state::{get_entries, get_tag, get_tags, update_screen_state, AppEvent},
+    util::{self, sort_files},
+};
 
 pub struct FilesState {
     pub current_dir: PathBuf,
@@ -15,9 +17,10 @@ pub struct FilesState {
 impl FilesState {
     pub fn new() -> Result<Self, anyhow::Error> {
         let current_dir = env::current_dir()?;
-        let files: Vec<fs::DirEntry> = fs::read_dir(&current_dir)?
+        let mut files: Vec<fs::DirEntry> = fs::read_dir(&current_dir)?
             .map(|rdir| rdir.unwrap())
-            .collect(); // TODO - Sort these files
+            .collect();
+        sort_files(&mut files);
 
         Ok(FilesState {
             current_dir,
@@ -74,7 +77,7 @@ impl FilesState {
 
             self.current_dir = path;
             self.files = files;
-            self.sort_files();
+            sort_files(&mut self.files);
             self.files_state = ListState::default();
             self.files_state.select(Some(0));
         }
@@ -89,7 +92,7 @@ impl FilesState {
 
                 self.current_dir = path.to_path_buf();
                 self.files = files;
-                self.sort_files();
+                sort_files(&mut self.files);
                 self.files_state = ListState::default();
                 self.files_state.select(Some(0));
             }
@@ -116,22 +119,5 @@ impl FilesState {
     fn add_all_files(&mut self) -> Result<AppEvent, anyhow::Error> {
         let tags = get_tags(&self.files[..])?;
         Ok(AppEvent::AddFiles(tags))
-    }
-
-    // Sort files list, directories first then by filename
-    fn sort_files(&mut self) {
-        self.files.sort_by(|a, b| {
-            match (
-                a.file_type().unwrap().is_dir(),
-                b.file_type().unwrap().is_dir(),
-            ) {
-                (true, false) => Ordering::Less,
-                (false, true) => Ordering::Greater,
-                (_, _) => a
-                    .file_name()
-                    .to_ascii_lowercase()
-                    .cmp(&b.file_name().to_ascii_lowercase()),
-            }
-        });
     }
 }
