@@ -77,11 +77,11 @@ where
             .constraints([Constraint::Min(0), Constraint::Length(3)].as_ref())
             .split(chunks[1]);
 
-        let filename = format!("| Filename\n| {}\n", state.details_filename);
+        let filename = format!("┳ Filename\n┗ {}\n", state.details_filename);
         let mut right_items = vec![ListItem::new(filename).style(list_item())];
 
         for item in state.details.iter().map(|item| {
-            let text = format!("| {}\n| {}\n", item.name(), item.content());
+            let text = format!("┳ {}\n┗ {}\n", item.name(), item.content());
             ListItem::new(text).style(list_item())
         }) {
             right_items.push(item);
