@@ -170,6 +170,17 @@ impl MainState {
         match self.focus {
             Focus::Input => {}
             _ => {
+                // Populate input field
+                if let Some(i) = self.details_state.selected() {
+                    if i == 0 {
+                        self.input = self.details_filename.clone();
+                    } else {
+                        self.input = match self.details[i - 1].content().text() {
+                            Some(s) => s.to_string(),
+                            None => "".to_string(),
+                        };
+                    }
+                }
                 self.focus = Focus::Input;
             }
         }
