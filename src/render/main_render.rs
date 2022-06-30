@@ -108,7 +108,7 @@ where
         match state.focus {
             Focus::Input => {
                 f.set_cursor(
-                    chunks_right[1].x + state.input.len() as u16 + 1,
+                    chunks_right[1].x + state.cursor_pos as u16 + 1,
                     chunks_right[1].y + 1,
                 );
             }

@@ -57,6 +57,7 @@ pub struct MainState {
     pub details: Vec<Frame>,
 
     pub input: String,
+    pub cursor_pos: usize,
 }
 
 impl MainState {
@@ -69,16 +70,25 @@ impl MainState {
             details_state: ListState::default(),
             details: vec![],
             input: "".to_string(),
+            cursor_pos: 0,
         }
     }
 
     pub fn handle_input(&mut self, key: &KeyEvent) -> AppEvent {
         match self.focus {
             Focus::Input => match key.code {
-                KeyCode::Char(c) => self.input.push(c),
-                KeyCode::Backspace => {
-                    self.input.pop();
+                KeyCode::Char(c) => {
+                    self.input.insert(self.cursor_pos, c);
+                    self.increment_cursor_pos();
                 }
+                KeyCode::Backspace => {
+                    if self.cursor_pos > 0 {
+                        self.input.remove(self.cursor_pos - 1);
+                    }
+                    self.decrement_cursor_pos();
+                }
+                KeyCode::Left => self.decrement_cursor_pos(),
+                KeyCode::Right => self.increment_cursor_pos(),
                 KeyCode::Enter => self.set_input(),
                 KeyCode::Esc => self.switch_focus(),
                 _ => {}
@@ -181,6 +191,7 @@ impl MainState {
                         };
                     }
                 }
+                self.set_cursor_pos();
                 self.focus = Focus::Input;
             }
         }
@@ -312,6 +323,22 @@ impl MainState {
             }
             _ => {}
         }
+    }
+
+    fn increment_cursor_pos(&mut self) {
+        if self.cursor_pos < self.input.len() {
+            self.cursor_pos += 1;
+        }
+    }
+
+    fn decrement_cursor_pos(&mut self) {
+        if self.cursor_pos > 0 {
+            self.cursor_pos -= 1;
+        }
+    }
+
+    fn set_cursor_pos(&mut self) {
+        self.cursor_pos = self.input.len();
     }
 
     fn remove_all_files(&mut self) {
