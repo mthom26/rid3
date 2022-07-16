@@ -1,3 +1,6 @@
+use std::fs;
+
+use home::home_dir;
 use serde::Deserialize;
 use tui::style::Color;
 
@@ -28,8 +31,31 @@ pub struct Config {
 
 impl Config {
     pub fn new() -> Self {
-        let config = toml::from_str(DEFAULT_CONFIG).unwrap();
-        config
+        let config_str = match home_dir() {
+            Some(mut path) => {
+                path.push(".config");
+                path.push("rid3");
+                path.push("config.toml");
+
+                match fs::read_to_string(path) {
+                    Ok(s) => Some(s),
+                    Err(_) => None,
+                }
+            }
+            None => None,
+        };
+
+        match config_str {
+            Some(s) => {
+                // TODO - Indicate to the user if there was an error parsing
+                //        the config file
+                match toml::from_str(&s) {
+                    Ok(config) => config,
+                    Err(_) => toml::from_str(DEFAULT_CONFIG).unwrap(),
+                }
+            }
+            None => toml::from_str(DEFAULT_CONFIG).unwrap(),
+        }
     }
 
     pub fn list_item_fg(&self) -> Color {
