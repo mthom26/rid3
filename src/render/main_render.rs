@@ -7,6 +7,7 @@ use tui::{
 };
 use tui_logger::TuiWidgetState;
 
+use crate::config::Config;
 use crate::render::{
     active_list_item, help_render::render_help, inactive_list_item, list_item,
     logs_render::render_logs,
@@ -28,6 +29,7 @@ pub fn render_main<B>(
     state: &mut MainState,
     show_help: bool,
     logger_state: &TuiWidgetState,
+    config: &Config,
 ) -> Result<(), anyhow::Error>
 where
     B: Backend,
@@ -57,8 +59,8 @@ where
                     None => "!Unknown Artist!",
                 };
                 ListItem::new(text).style(match item.selected {
-                    true => inactive_list_item(),
-                    false => list_item(),
+                    true => inactive_list_item(config),
+                    false => list_item(config),
                 })
             })
             .collect();
@@ -66,8 +68,8 @@ where
         let left_block = List::new(items)
             .block(Block::default().title("Files").borders(Borders::ALL))
             .highlight_style(match state.focus {
-                Focus::Files => active_list_item(),
-                _ => inactive_list_item(),
+                Focus::Files => active_list_item(config),
+                _ => inactive_list_item(config),
             });
 
         f.render_stateful_widget(left_block, chunks[0], &mut state.files_state);
@@ -78,11 +80,11 @@ where
             .split(chunks[1]);
 
         let filename = format!("┳ Filename\n┗ {}\n", state.details_filename);
-        let mut right_items = vec![ListItem::new(filename).style(list_item())];
+        let mut right_items = vec![ListItem::new(filename).style(list_item(config))];
 
         for item in state.details.iter().map(|item| {
             let text = format!("┳ {}\n┗ {}\n", item.name(), item.content());
-            ListItem::new(text).style(list_item())
+            ListItem::new(text).style(list_item(config))
         }) {
             right_items.push(item);
         }
@@ -90,8 +92,8 @@ where
         let right_block = List::new(right_items)
             .block(Block::default().title("Details").borders(Borders::ALL))
             .highlight_style(match state.focus {
-                Focus::Details => active_list_item(),
-                _ => inactive_list_item(),
+                Focus::Details => active_list_item(config),
+                _ => inactive_list_item(config),
             });
         f.render_stateful_widget(right_block, chunks_right[0], &mut state.details_state);
 
@@ -100,7 +102,7 @@ where
             Paragraph::new(text).block(Block::default().title("Input").borders(Borders::ALL));
         f.render_widget(input_block, chunks_right[1]);
 
-        let mut log_widget = render_logs();
+        let mut log_widget = render_logs(config);
         log_widget.state(logger_state);
         f.render_widget(log_widget, c[1]);
 
@@ -116,7 +118,7 @@ where
         }
 
         if show_help {
-            render_help(f, &HELP_TEXT);
+            render_help(f, &HELP_TEXT, config);
         }
     })?;
 

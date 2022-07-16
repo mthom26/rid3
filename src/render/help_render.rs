@@ -6,7 +6,9 @@ use tui::{
     Frame,
 };
 
-pub fn render_help<B>(frame: &mut Frame<B>, items: &[&str])
+use crate::config::Config;
+
+pub fn render_help<B>(frame: &mut Frame<B>, items: &[&str], config: &Config)
 where
     B: Backend,
 {
@@ -38,12 +40,12 @@ where
 
     let list_items: Vec<ListItem> = items
         .iter()
-        .map(|item| ListItem::new(*item).style(Style::default().fg(Color::LightGreen)))
+        .map(|item| ListItem::new(*item).style(Style::default().fg(config.list_item_fg())))
         .collect();
 
     let block = List::new(list_items)
         .block(Block::default().title("Help").borders(Borders::ALL))
-        .style(Style::default().fg(Color::LightYellow))
+        .style(Style::default().fg(config.help_border()))
         .highlight_style(
             Style::default()
                 .bg(Color::DarkGray)

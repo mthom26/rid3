@@ -13,9 +13,11 @@ use tokio::{
 use tui::{backend::CrosstermBackend, Terminal};
 use tui_logger::{TuiWidgetEvent, TuiWidgetState};
 
+mod config;
 mod render;
 mod state;
 mod util;
+use config::Config;
 use render::{files_render::render_files, frames_render::render_frames, main_render::render_main};
 use state::{
     files_state::FilesState, frames_state::FramesState, main_state::MainState, AppEvent,
@@ -33,6 +35,8 @@ async fn main() -> Result<(), anyhow::Error> {
 
     tui_logger::init_logger(LevelFilter::Debug).unwrap();
     tui_logger::set_default_level(LevelFilter::Debug);
+
+    let config = Config::new();
 
     let mut screen_state = ScreenState::Main;
     let mut show_help = false;
@@ -77,15 +81,27 @@ async fn main() -> Result<(), anyhow::Error> {
     loop {
         // Render
         match screen_state {
-            ScreenState::Main => {
-                render_main(&mut terminal, &mut main_state, show_help, &logger_state)?
-            }
-            ScreenState::Files => {
-                render_files(&mut terminal, &mut files_state, show_help, &logger_state)?
-            }
-            ScreenState::Frames => {
-                render_frames(&mut terminal, &mut frames_state, show_help, &logger_state)?
-            }
+            ScreenState::Main => render_main(
+                &mut terminal,
+                &mut main_state,
+                show_help,
+                &logger_state,
+                &config,
+            )?,
+            ScreenState::Files => render_files(
+                &mut terminal,
+                &mut files_state,
+                show_help,
+                &logger_state,
+                &config,
+            )?,
+            ScreenState::Frames => render_frames(
+                &mut terminal,
+                &mut frames_state,
+                show_help,
+                &logger_state,
+                &config,
+            )?,
         }
 
         tokio::select! {

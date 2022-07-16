@@ -7,6 +7,7 @@ use tui::{
 };
 use tui_logger::TuiWidgetState;
 
+use crate::config::Config;
 use crate::render::{help_render::render_help, inactive_list_item, logs_render::render_logs};
 use crate::state::files_state::FilesState;
 
@@ -22,6 +23,7 @@ pub fn render_files<B>(
     state: &mut FilesState,
     show_help: bool,
     logger_state: &TuiWidgetState,
+    config: &Config,
 ) -> Result<(), anyhow::Error>
 where
     B: Backend,
@@ -52,16 +54,16 @@ where
 
         let block = List::new(items)
             .block(Block::default().title("Files").borders(Borders::ALL))
-            .highlight_style(inactive_list_item());
+            .highlight_style(inactive_list_item(config));
 
         f.render_stateful_widget(block, chunks[0], &mut state.files_state);
 
-        let mut log_widget = render_logs();
+        let mut log_widget = render_logs(config);
         log_widget.state(logger_state);
         f.render_widget(log_widget, chunks[1]);
 
         if show_help {
-            render_help(f, &HELP_TEXT);
+            render_help(f, &HELP_TEXT, config);
         }
     })?;
 
