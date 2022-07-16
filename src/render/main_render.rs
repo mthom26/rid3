@@ -7,12 +7,14 @@ use tui::{
 };
 use tui_logger::TuiWidgetState;
 
-use crate::config::Config;
-use crate::render::{
-    active_list_item, help_render::render_help, inactive_list_item, list_item,
-    logs_render::render_logs,
+use crate::{
+    config::Config,
+    render::{
+        active_list_item, help_render::render_help, inactive_list_item, list_item,
+        logs_render::render_logs,
+    },
+    state::main_state::{Focus, MainState},
 };
-use crate::state::main_state::{Focus, MainState};
 
 const HELP_TEXT: [&str; 7] = [
     "`q` - Quit",

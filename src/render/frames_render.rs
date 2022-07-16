@@ -6,11 +6,11 @@ use tui::{
 };
 use tui_logger::TuiWidgetState;
 
-use crate::config::Config;
-use crate::render::{
-    help_render::render_help, inactive_list_item, list_item, logs_render::render_logs,
+use crate::{
+    config::Config,
+    render::{help_render::render_help, inactive_list_item, list_item, logs_render::render_logs},
+    state::{frame_data::SUPPORTED_FRAMES, frames_state::FramesState},
 };
-use crate::state::{frame_data::SUPPORTED_FRAMES, frames_state::FramesState};
 
 const HELP_TEXT: [&str; 2] = ["`q` - Quit", "`a` - Add selected frame"];
 
