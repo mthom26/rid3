@@ -60,6 +60,7 @@ where
 
         f.render_stateful_widget(block, chunks[0], &mut state.files_state);
 
+        // Log block
         let mut log_widget = render_logs(config);
         log_widget.state(logger_state);
         f.render_widget(log_widget, chunks[1]);
