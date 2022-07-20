@@ -1,6 +1,7 @@
 use std::fs;
 
 use home::home_dir;
+use log::{error, warn};
 use serde::Deserialize;
 use tui::style::Color;
 
@@ -46,15 +47,18 @@ impl Config {
         };
 
         match config_str {
-            Some(s) => {
-                // TODO - Indicate to the user if there was an error parsing
-                //        the config file
-                match toml::from_str(&s) {
-                    Ok(config) => config,
-                    Err(_) => toml::from_str(DEFAULT_CONFIG).unwrap(),
+            Some(s) => match toml::from_str(&s) {
+                Ok(config) => config,
+                Err(e) => {
+                    error!("Failed to parse config file - {}", e);
+                    warn!("Using default config.");
+                    toml::from_str(DEFAULT_CONFIG).unwrap()
                 }
+            },
+            None => {
+                warn!("No config file found. Using default config.");
+                toml::from_str(DEFAULT_CONFIG).unwrap()
             }
-            None => toml::from_str(DEFAULT_CONFIG).unwrap(),
         }
     }
 
