@@ -5,7 +5,8 @@ use std::{
 };
 
 use crossterm::event::{KeyCode, KeyEvent};
-use id3::Tag;
+use id3::{self, Tag};
+use log::{error, warn};
 use tui::widgets::ListState;
 
 use crate::{
@@ -130,10 +131,23 @@ fn get_tags(entries: &[DirEntry]) -> Result<Vec<Entry>, anyhow::Error> {
     let tags = entries
         .iter()
         .filter_map(|entry| match entry.path().is_dir() {
-            false => Some(Entry::new(
-                entry.path(),
-                Tag::read_from_path(entry.path()).expect("Could not read Tag"),
-            )),
+            false => {
+                let tag = match Tag::read_from_path(entry.path()) {
+                    Ok(tag) => tag,
+                    Err(id3::Error {
+                        kind: id3::ErrorKind::NoTag,
+                        ..
+                    }) => {
+                        warn!("File has no id3 tag, adding empty tag");
+                        Tag::new()
+                    }
+                    Err(e) => {
+                        error!("Failed to add file - {}", e);
+                        return None;
+                    }
+                };
+                Some(Entry::new(entry.path(), tag))
+            }
             true => None,
         })
         .collect();
