@@ -112,7 +112,7 @@ impl FilesState {
             i => {
                 // `self.files` has one less item than `self.files_state` so
                 // need to subtract one from index here
-                let tag = get_tag(&self.files[i - 1])?;
+                let tag = get_tags(&self.files[i - 1..i])?;
                 Ok(AppEvent::AddFiles(tag))
             }
         }
@@ -139,18 +139,6 @@ fn get_tags(entries: &[DirEntry]) -> Result<Vec<Entry>, anyhow::Error> {
         .collect();
 
     Ok(tags)
-}
-
-// Get a Vec of (Path, Tags) from a DirEntry, returning a Vec here for convenience
-fn get_tag(entry: &DirEntry) -> Result<Vec<Entry>, anyhow::Error> {
-    if entry.path().is_dir() {
-        Ok(vec![])
-    } else {
-        Ok(vec![Entry::new(
-            entry.path(),
-            Tag::read_from_path(entry.path()).expect("Could not read Tag"),
-        )])
-    }
 }
 
 // Get a Vec of DirEntrys from a Path, filters out everything except .mp3 and other directories
