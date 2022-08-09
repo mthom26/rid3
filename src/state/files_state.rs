@@ -1,5 +1,4 @@
 use std::{
-    env,
     fs::{self, DirEntry},
     path::{Path, PathBuf},
 };
@@ -21,13 +20,12 @@ pub struct FilesState {
 }
 
 impl FilesState {
-    pub fn new() -> Result<Self, anyhow::Error> {
-        let current_dir = env::current_dir()?;
-        let mut files = get_entries(&current_dir)?;
+    pub fn new(dir: PathBuf) -> Result<Self, anyhow::Error> {
+        let mut files = get_entries(&dir)?;
         sort_files(&mut files);
 
         Ok(FilesState {
-            current_dir,
+            current_dir: dir,
             files_state: ListState::default(),
             files,
         })

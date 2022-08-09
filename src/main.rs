@@ -1,4 +1,4 @@
-use std::{io, time::Duration};
+use std::{env, io, path::PathBuf, time::Duration};
 
 use crossterm::{
     event::{self, Event, KeyCode},
@@ -13,10 +13,12 @@ use tokio::{
 use tui::{backend::CrosstermBackend, Terminal};
 use tui_logger::{TuiWidgetEvent, TuiWidgetState};
 
+mod args;
 mod config;
 mod render;
 mod state;
 mod util;
+use args::get_args;
 use config::Config;
 use render::{files_render::render_files, frames_render::render_frames, main_render::render_main};
 use state::{
@@ -26,6 +28,12 @@ use state::{
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
+    let args = get_args();
+    let dir = match args.get_one::<String>("path") {
+        Some(p) => PathBuf::from(p),
+        None => env::current_dir()?,
+    };
+
     crossterm::terminal::enable_raw_mode()?;
     let mut stdout = io::stdout();
     stdout.execute(EnterAlternateScreen)?;
@@ -41,7 +49,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut screen_state = ScreenState::Main;
     let mut show_help = false;
     let mut main_state = MainState::new();
-    let mut files_state = FilesState::new()?;
+    let mut files_state = FilesState::new(dir)?;
     let mut frames_state = FramesState::new();
 
     let mut logger_state = TuiWidgetState::new();
