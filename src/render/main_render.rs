@@ -3,7 +3,7 @@ use tui::{
     layout::{Constraint, Direction, Layout},
     terminal::Terminal,
     text::Span,
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    widgets::{Block, Borders, Clear, List, ListItem, Paragraph},
 };
 use tui_logger::TuiWidgetState;
 
@@ -11,7 +11,7 @@ use crate::{
     config::Config,
     render::{
         active_list_item, help_render::render_help, inactive_list_item, list_item,
-        logs_render::render_logs,
+        logs_render::render_logs, popup_render::get_block,
     },
     state::main_state::{Focus, MainState},
 };
@@ -25,6 +25,8 @@ const HELP_TEXT: [&str; 7] = [
     "`u` - Update file names",
     "`w` - Write changes",
 ];
+
+const FRAME_HELP_TEXT: [&str; 2] = ["`Esc` - Back", "`w` - Save frame"];
 
 pub fn render_main<B>(
     terminal: &mut Terminal<B>,
@@ -126,17 +128,63 @@ where
 
         // Render cursor
         match state.focus {
-            Focus::Input => {
+            Focus::Edit => {
+                let items: Vec<ListItem> = state
+                    .popup
+                    .items
+                    .iter()
+                    .map(|item| {
+                        let text = format!("┳ {}\n┗ {}\n", item.0, item.1);
+                        ListItem::new(text).style(list_item(config))
+                    })
+                    .collect();
+                let (block, input_block, rect, input_rect) = get_block(f, config);
+                let list = List::new(items)
+                    .block(block)
+                    .highlight_style(active_list_item(config));
+
+                f.render_widget(Clear, rect);
+                f.render_widget(Clear, input_rect);
+                f.render_widget(input_block, input_rect);
+                f.render_stateful_widget(list, rect, &mut state.popup.state);
+            }
+            Focus::EditInput => {
+                let items: Vec<ListItem> = state
+                    .popup
+                    .items
+                    .iter()
+                    .map(|item| {
+                        let text = format!("┳ {}\n┗ {}\n", item.0, item.1);
+                        ListItem::new(text).style(list_item(config))
+                    })
+                    .collect();
+                let (block, input_block, rect, input_rect) = get_block(f, config);
+                let list = List::new(items)
+                    .block(block)
+                    .highlight_style(active_list_item(config));
+
+                let input_block = Paragraph::new(Span::raw(&state.popup.input)).block(input_block);
+                f.render_widget(Clear, rect);
+                f.render_widget(Clear, input_rect);
+                f.render_widget(input_block, input_rect);
+                f.render_stateful_widget(list, rect, &mut state.popup.state);
                 f.set_cursor(
-                    chunks_right[1].x + state.cursor_pos as u16 + 1,
-                    chunks_right[1].y + 1,
+                    input_rect.x + state.popup.cursor_pos as u16 + 1,
+                    input_rect.y + 1,
                 );
             }
             _ => {}
         }
 
         if show_help {
-            render_help(f, &HELP_TEXT, config);
+            render_help(
+                f,
+                match state.focus {
+                    Focus::Edit => &FRAME_HELP_TEXT,
+                    _ => &HELP_TEXT,
+                },
+                config,
+            );
         }
     })?;
 

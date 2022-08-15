@@ -12,7 +12,8 @@ use crate::util;
 pub enum Focus {
     Files,
     Details,
-    Input,
+    Edit,
+    EditInput,
 }
 
 #[derive(Clone)]
@@ -42,6 +43,69 @@ impl Entry {
     }
 }
 
+#[derive(Default)]
+pub struct PopupState {
+    pub state: ListState,
+    // Currently each tuple in items contains text to identify the input
+    // and the value of the input (text, value)
+    pub items: Vec<(String, String)>,
+
+    pub cursor_pos: usize,
+    pub input: String,
+}
+
+impl PopupState {
+    pub fn next(&mut self) {
+        let i = match self.state.selected() {
+            Some(i) => util::next(i, self.items.len()),
+            None => 0,
+        };
+        self.state.select(Some(i));
+    }
+
+    pub fn prev(&mut self) {
+        let i = match self.state.selected() {
+            Some(i) => util::prev(i, self.items.len()),
+            None => 0,
+        };
+        self.state.select(Some(i));
+    }
+
+    fn increment_cursor_pos(&mut self) {
+        if self.cursor_pos < self.input.len() {
+            self.cursor_pos += 1;
+        }
+    }
+
+    fn decrement_cursor_pos(&mut self) {
+        if self.cursor_pos > 0 {
+            self.cursor_pos -= 1;
+        }
+    }
+
+    fn set_cursor_pos(&mut self) {
+        self.cursor_pos = self.input.len();
+    }
+
+    fn set_input(&mut self) {
+        match self.state.selected() {
+            Some(i) => {
+                self.items[i].1 = self.input.clone();
+                self.input.clear();
+                self.set_cursor_pos();
+            }
+            None => {}
+        }
+    }
+
+    fn populate_input(&mut self) {
+        if let Some(i) = self.state.selected() {
+            self.input = self.items[i].1.clone();
+            self.set_cursor_pos();
+        }
+    }
+}
+
 pub struct MainState {
     pub focus: Focus,
 
@@ -58,6 +122,8 @@ pub struct MainState {
 
     pub input: String,
     pub cursor_pos: usize,
+
+    pub popup: PopupState,
 }
 
 impl MainState {
@@ -71,26 +137,38 @@ impl MainState {
             details: vec![],
             input: "".to_string(),
             cursor_pos: 0,
+            popup: PopupState::default(),
         }
     }
 
     pub fn handle_input(&mut self, key: &KeyEvent) -> AppEvent {
         match self.focus {
-            Focus::Input => match key.code {
+            Focus::Edit => match key.code {
+                KeyCode::Esc => self.switch_focus(),
+                KeyCode::Up => self.popup.prev(),
+                KeyCode::Down => self.popup.next(),
+                KeyCode::Enter => self.switch_focus_popup_input(),
+                KeyCode::Char('h') => return AppEvent::ToggleHelp,
+                KeyCode::Char('w') => self.set_frame(),
+                _ => {}
+            },
+            Focus::EditInput => match key.code {
                 KeyCode::Char(c) => {
-                    self.input.insert(self.cursor_pos, c);
-                    self.increment_cursor_pos();
+                    self.popup.input.insert(self.popup.cursor_pos, c);
+                    self.popup.increment_cursor_pos();
                 }
                 KeyCode::Backspace => {
-                    if self.cursor_pos > 0 {
-                        self.input.remove(self.cursor_pos - 1);
+                    if self.popup.cursor_pos > 0 {
+                        self.popup.input.remove(self.popup.cursor_pos - 1);
                     }
-                    self.decrement_cursor_pos();
+                    self.popup.decrement_cursor_pos();
                 }
-                KeyCode::Left => self.decrement_cursor_pos(),
-                KeyCode::Right => self.increment_cursor_pos(),
-                KeyCode::Enter => self.set_input(),
-                KeyCode::Esc => self.switch_focus(),
+                KeyCode::Left => self.popup.decrement_cursor_pos(),
+                KeyCode::Right => self.popup.increment_cursor_pos(),
+                KeyCode::Enter => {
+                    self.popup.set_input();
+                    self.focus = Focus::Edit;
+                }
                 _ => {}
             },
             _ => match key.code {
@@ -121,7 +199,7 @@ impl MainState {
                 KeyCode::Up => self.prev(),
                 KeyCode::Down => self.next(),
                 KeyCode::Tab => self.switch_focus(),
-                KeyCode::Enter => self.switch_input(),
+                KeyCode::Enter => self.edit_frame(),
                 _ => {}
             },
         }
@@ -172,55 +250,42 @@ impl MainState {
                 self.focus = Focus::Details
             }
             Focus::Details => self.focus = Focus::Files,
-            Focus::Input => self.focus = Focus::Files,
+            Focus::Edit => self.focus = Focus::Details,
+            Focus::EditInput => self.focus = Focus::Edit,
         }
     }
 
-    fn switch_input(&mut self) {
-        match self.focus {
-            Focus::Input => {}
-            _ => {
-                // Populate input field
-                if let Some(i) = self.details_state.selected() {
-                    if i == 0 {
-                        self.input = self.details_filename.clone();
-                    } else {
-                        self.input = match self.details[i - 1].content().text() {
-                            Some(s) => s.to_string(),
-                            None => "".to_string(),
-                        };
-                    }
-                }
-                self.set_cursor_pos();
-                self.focus = Focus::Input;
-            }
-        }
+    fn switch_focus_popup_input(&mut self) {
+        self.popup.populate_input();
+        self.focus = Focus::EditInput;
     }
 
-    fn set_input(&mut self) {
+    fn set_frame(&mut self) {
         // If index is 0 here the filename is highlighted so handle
         // it and return early
         if let Some(0) = self.details_state.selected() {
             if let Some(i) = self.files_state.selected() {
-                self.files[i].filename = self.input.clone();
+                self.files[i].filename = self.popup.items[0].1.clone();
             }
 
-            self.input = "".to_string();
             self.focus = Focus::Details;
             self.update_details();
             return;
         }
 
+        // Create new frame
         let new_frame = match self.details_state.selected() {
             Some(i) => {
                 let id = self.details[i - 1].id();
-                let new_frame = Frame::text(id, &self.input);
+                // TODO check frame type by id and write appropriate data to frame
+                let new_frame = Frame::text(id, &self.popup.items[0].1.clone());
                 self.details[i - 1] = new_frame.clone();
                 new_frame
             }
             _ => unreachable!(),
         };
 
+        // Update selected files
         for file in &mut self.files {
             if file.selected {
                 file.tag.add_frame(new_frame.clone());
@@ -230,10 +295,46 @@ impl MainState {
             self.files[i].tag.add_frame(new_frame);
         }
 
-        self.input = "".to_string();
         self.focus = Focus::Details;
         self.update_details();
         self.next();
+    }
+
+    fn edit_frame(&mut self) {
+        match self.focus {
+            _ => {
+                if let Some(i) = self.details_state.selected() {
+                    if i == 0 {
+                        // Filename selected spawn appropriate popup
+                        let filename = self.details_filename.clone();
+                        self.focus = Focus::Edit;
+                        self.popup = PopupState {
+                            items: vec![("Filename".to_string(), filename)],
+                            ..Default::default()
+                        };
+                    } else {
+                        match self.details[i - 1].id() {
+                            // Spawn appropriate popup for frame
+                            "TXXX" => { /* TODO */ }
+                            t if t.starts_with("T") => {
+                                // Any frame that starts with `T` should only have one text field
+                                // except for `TXXX`
+                                let text = self.details[i - 1]
+                                    .content()
+                                    .text()
+                                    .expect("Could not get frame text");
+                                self.focus = Focus::Edit;
+                                self.popup = PopupState {
+                                    items: vec![("Text".to_string(), text.to_string())],
+                                    ..Default::default()
+                                };
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // Remove selected frame from all selected files
@@ -290,14 +391,14 @@ impl MainState {
                 self.files_state.select(Some(i));
                 self.update_details();
             }
-            // When input is focused allow next details item to be selected
-            Focus::Details | Focus::Input => {
+            Focus::Details => {
                 let i = match self.details_state.selected() {
                     Some(i) => util::next(i, self.details.len() + 1),
                     None => 0,
                 };
                 self.details_state.select(Some(i));
             }
+            _ => {}
         }
     }
 
@@ -323,22 +424,6 @@ impl MainState {
             }
             _ => {}
         }
-    }
-
-    fn increment_cursor_pos(&mut self) {
-        if self.cursor_pos < self.input.len() {
-            self.cursor_pos += 1;
-        }
-    }
-
-    fn decrement_cursor_pos(&mut self) {
-        if self.cursor_pos > 0 {
-            self.cursor_pos -= 1;
-        }
-    }
-
-    fn set_cursor_pos(&mut self) {
-        self.cursor_pos = self.input.len();
     }
 
     fn remove_all_files(&mut self) {

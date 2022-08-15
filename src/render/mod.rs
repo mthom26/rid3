@@ -7,6 +7,7 @@ pub mod frames_render;
 pub mod help_render;
 pub mod logs_render;
 pub mod main_render;
+pub mod popup_render;
 
 pub fn list_item(config: &Config) -> Style {
     Style::default()
