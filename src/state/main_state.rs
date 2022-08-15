@@ -1,7 +1,7 @@
 use std::{fs, path::PathBuf};
 
 use crossterm::event::{KeyCode, KeyEvent};
-use id3::{Content, Frame, Tag, TagLike, Version};
+use id3::{frame::ExtendedText, Content, Frame, Tag, TagLike, Version};
 use log::{debug, warn};
 use tui::widgets::ListState;
 
@@ -221,10 +221,7 @@ impl MainState {
         for frame in self.files[index].tag.frames() {
             // Only handle text frames
             if frame.id().starts_with("T") {
-                // Don't handle user defined text frames
-                if frame.id() != "TXXX" {
-                    new_details.push(frame.clone());
-                }
+                new_details.push(frame.clone());
             }
         }
         // TODO - Customise this sort
@@ -278,9 +275,22 @@ impl MainState {
             Some(i) => {
                 let id = self.details[i - 1].id();
                 // TODO check frame type by id and write appropriate data to frame
-                let new_frame = Frame::text(id, &self.popup.items[0].1.clone());
-                self.details[i - 1] = new_frame.clone();
-                new_frame
+                match id {
+                    "TXXX" => {
+                        let content = Content::ExtendedText(ExtendedText {
+                            description: self.popup.items[0].1.clone(),
+                            value: self.popup.items[1].1.clone(),
+                        });
+                        let new_frame = Frame::with_content(id, content);
+                        self.details[i - 1] = new_frame.clone();
+                        new_frame
+                    }
+                    _ => {
+                        let new_frame = Frame::text(id, self.popup.items[0].1.clone());
+                        self.details[i - 1] = new_frame.clone();
+                        new_frame
+                    }
+                }
             }
             _ => unreachable!(),
         };
@@ -315,7 +325,25 @@ impl MainState {
                     } else {
                         match self.details[i - 1].id() {
                             // Spawn appropriate popup for frame
-                            "TXXX" => { /* TODO */ }
+                            "TXXX" => {
+                                let default_text = ExtendedText {
+                                    description: "".to_string(),
+                                    value: "".to_string(),
+                                };
+                                let text = self.details[i - 1]
+                                    .content()
+                                    .extended_text()
+                                    .unwrap_or(&default_text);
+
+                                self.focus = Focus::Edit;
+                                self.popup = PopupState {
+                                    items: vec![
+                                        ("Description".to_string(), text.description.to_string()),
+                                        ("Value".to_string(), text.value.to_string()),
+                                    ],
+                                    ..Default::default()
+                                };
+                            }
                             t if t.starts_with("T") => {
                                 // Any frame that starts with `T` should only have one text field
                                 // except for `TXXX`
@@ -554,7 +582,8 @@ fn get_frames(tag: &Tag) -> Vec<(String, String)> {
 
         let text: String = match frame.content() {
             Content::Text(txt) => txt.clone(),
-            _ => unreachable!(),
+            // TODO - Handle ExtendedText
+            _ => unimplemented!(),
         };
         frames.push((name, text));
     }
