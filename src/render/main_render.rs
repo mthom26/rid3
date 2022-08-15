@@ -63,11 +63,6 @@ where
             .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
             .split(chunks[0]);
 
-        let chunks_right = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Min(0), Constraint::Length(3)].as_ref())
-            .split(chunks_top[1]);
-
         // Active files list
         let items: Vec<ListItem> = state
             .files
@@ -113,20 +108,14 @@ where
                 Focus::Details => active_list_item(config),
                 _ => inactive_list_item(config),
             });
-        f.render_stateful_widget(right_block, chunks_right[0], &mut state.details_state);
-
-        // Input block
-        let text = Span::raw(&state.input);
-        let input_block =
-            Paragraph::new(text).block(Block::default().title("Input").borders(Borders::ALL));
-        f.render_widget(input_block, chunks_right[1]);
+        f.render_stateful_widget(right_block, chunks_top[1], &mut state.details_state);
 
         // Log block
         let mut log_widget = render_logs(config);
         log_widget.state(logger_state);
         f.render_widget(log_widget, chunks[1]);
 
-        // Render cursor
+        // Render popup
         match state.focus {
             Focus::Edit => {
                 let items: Vec<ListItem> = state
