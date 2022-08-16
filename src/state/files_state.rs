@@ -17,17 +17,20 @@ pub struct FilesState {
     pub current_dir: PathBuf,
     pub files_state: ListState,
     pub files: Vec<fs::DirEntry>,
+
+    pub show_hidden_dirs: bool,
 }
 
 impl FilesState {
     pub fn new(dir: PathBuf) -> Result<Self, anyhow::Error> {
-        let mut files = get_entries(&dir)?;
+        let mut files = get_entries(&dir, false)?;
         sort_files(&mut files);
 
         Ok(FilesState {
             current_dir: dir,
             files_state: ListState::default(),
             files,
+            show_hidden_dirs: false,
         })
     }
 
@@ -75,7 +78,7 @@ impl FilesState {
         let index = index - 1; // ListState has one more entry than the Vector of dir entries
         if self.files[index].file_type()?.is_dir() {
             let path = self.files[index].path();
-            let files = get_entries(&path)?;
+            let files = get_entries(&path, self.show_hidden_dirs)?;
 
             self.current_dir = path;
             self.files = files;
@@ -90,7 +93,7 @@ impl FilesState {
     fn parent_dir(&mut self) -> Result<(), anyhow::Error> {
         match self.current_dir.parent() {
             Some(path) => {
-                let files = get_entries(path)?;
+                let files = get_entries(path, self.show_hidden_dirs)?;
 
                 self.current_dir = path.to_path_buf();
                 self.files = files;
@@ -154,12 +157,16 @@ fn get_tags(entries: &[DirEntry]) -> Result<Vec<Entry>, anyhow::Error> {
 }
 
 // Get a Vec of DirEntrys from a Path, filters out everything except .mp3 and other directories
-fn get_entries(path: &Path) -> Result<Vec<DirEntry>, anyhow::Error> {
+fn get_entries(path: &Path, show_hidden_dirs: bool) -> Result<Vec<DirEntry>, anyhow::Error> {
     let files = fs::read_dir(&path)?
         .filter_map(|rdir| {
             let rdir = rdir.unwrap();
             if rdir.file_type().unwrap().is_dir() {
-                return Some(rdir);
+                if rdir.file_name().to_str().unwrap().starts_with(".") && !show_hidden_dirs {
+                    return None;
+                } else {
+                    return Some(rdir);
+                }
             } else if let Some(ext) = rdir.path().extension() {
                 if ext.to_str() == Some("mp3") {
                     return Some(rdir);
