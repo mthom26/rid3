@@ -270,6 +270,11 @@ impl MainState {
             return;
         }
 
+        // Here we are adding a new frame, but there can be multiple User defined text
+        // frames in one tag. If a new frame is added with a new description the old frame
+        // must be removed.
+        let mut old_frame_description: Option<String> = None;
+
         // Create new frame
         let new_frame = match self.details_state.selected() {
             Some(i) => {
@@ -277,10 +282,26 @@ impl MainState {
                 // TODO check frame type by id and write appropriate data to frame
                 match id {
                     "TXXX" => {
-                        let content = Content::ExtendedText(ExtendedText {
-                            description: self.popup.items[0].1.clone(),
-                            value: self.popup.items[1].1.clone(),
-                        });
+                        let previous_description = self.details[i - 1]
+                            .content()
+                            .extended_text()
+                            .unwrap()
+                            .description
+                            .clone();
+                        let description = self.popup.items[0].1.clone();
+                        let value = self.popup.items[1].1.clone();
+
+                        // Adding new description, need to delete old frame
+                        if previous_description != description {
+                            old_frame_description = Some(previous_description);
+                        }
+
+                        // Check for empty fields
+                        if description.is_empty() || value.is_empty() {
+                            warn!("User defined text frame contained an empty field, not adding new frame");
+                            return;
+                        }
+                        let content = Content::ExtendedText(ExtendedText { description, value });
                         let new_frame = Frame::with_content(id, content);
                         self.details[i - 1] = new_frame.clone();
                         new_frame
@@ -303,6 +324,21 @@ impl MainState {
         }
         if let Some(i) = self.files_state.selected() {
             self.files[i].tag.add_frame(new_frame);
+        }
+
+        // Remove old TXXX frame
+        if old_frame_description.is_some() {
+            for file in &mut self.files {
+                if file.selected {
+                    file.tag
+                        .remove_extended_text(Some(&old_frame_description.clone().unwrap()), None);
+                }
+            }
+            if let Some(i) = self.files_state.selected() {
+                self.files[i]
+                    .tag
+                    .remove_extended_text(Some(&old_frame_description.unwrap()), None);
+            }
         }
 
         self.focus = Focus::Details;
@@ -390,7 +426,16 @@ impl MainState {
 
     pub fn add_frame(&mut self, id: &str) {
         debug!("Adding frame {}", id);
-        let frame = Frame::text(id, "");
+        let frame = match id {
+            "TXXX" => Frame::with_content(
+                id,
+                Content::ExtendedText(ExtendedText {
+                    description: "Description".to_string(),
+                    value: "Value".to_string(),
+                }),
+            ),
+            _ => Frame::text(id, ""),
+        };
 
         for entry in self.files.iter_mut() {
             if entry.selected {
