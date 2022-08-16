@@ -301,13 +301,20 @@ impl MainState {
                             warn!("User defined text frame contained an empty field, not adding new frame");
                             return;
                         }
+
                         let content = Content::ExtendedText(ExtendedText { description, value });
                         let new_frame = Frame::with_content(id, content);
                         self.details[i - 1] = new_frame.clone();
                         new_frame
                     }
                     _ => {
-                        let new_frame = Frame::text(id, self.popup.items[0].1.clone());
+                        let text = self.popup.items[0].1.clone();
+                        if text.is_empty() {
+                            warn!("Text frame contained an empty field, not adding new frame");
+                            return;
+                        }
+
+                        let new_frame = Frame::text(id, text);
                         self.details[i - 1] = new_frame.clone();
                         new_frame
                     }
