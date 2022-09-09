@@ -87,17 +87,23 @@ impl PopupState {
         self.cursor_pos = self.input.len();
     }
 
+    // Save input to selected item
     fn set_input(&mut self) {
         match self.state.selected() {
             Some(i) => {
                 self.items[i].1 = self.input.clone();
-                self.input.clear();
-                self.set_cursor_pos();
+                self.clear_input();
             }
             None => {}
         }
     }
 
+    fn clear_input(&mut self) {
+        self.input.clear();
+        self.set_cursor_pos();
+    }
+
+    // Fill input with selected items text
     fn populate_input(&mut self) {
         if let Some(i) = self.state.selected() {
             self.input = self.items[i].1.clone();
@@ -153,6 +159,10 @@ impl MainState {
                 _ => {}
             },
             Focus::EditInput => match key.code {
+                KeyCode::Esc => {
+                    self.popup.clear_input();
+                    self.focus = Focus::Edit;
+                }
                 KeyCode::Char(c) => {
                     self.popup.input.insert(self.popup.cursor_pos, c);
                     self.popup.increment_cursor_pos();
@@ -166,8 +176,16 @@ impl MainState {
                 KeyCode::Left => self.popup.decrement_cursor_pos(),
                 KeyCode::Right => self.popup.increment_cursor_pos(),
                 KeyCode::Enter => {
-                    self.popup.set_input();
-                    self.focus = Focus::Edit;
+                    if self.popup.items.len() < 2 {
+                        // Automatically save the frame and close the popup when
+                        // there is only one input field
+                        self.popup.set_input();
+                        self.focus = Focus::Edit;
+                        self.set_frame();
+                    } else {
+                        self.popup.set_input();
+                        self.focus = Focus::Edit;
+                    }
                 }
                 _ => {}
             },
@@ -399,6 +417,10 @@ impl MainState {
                                     items: vec![("Text".to_string(), text.to_string())],
                                     ..Default::default()
                                 };
+                                // This is the only input field on this frame so automatically select
+                                // and focus input
+                                self.popup.next();
+                                self.switch_focus_popup_input();
                             }
                             _ => {}
                         }
