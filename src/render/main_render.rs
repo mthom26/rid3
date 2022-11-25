@@ -5,10 +5,10 @@ use tui::{
     text::Span,
     widgets::{Block, Borders, Clear, List, ListItem, Paragraph},
 };
-use tui_logger::TuiWidgetState;
 
 use crate::{
     config::Config,
+    logger::Logger,
     render::{
         active_list_item, help_render::render_help, inactive_list_item, list_item,
         logs_render::render_logs, popup_render::get_block,
@@ -32,8 +32,8 @@ pub fn render_main<B>(
     terminal: &mut Terminal<B>,
     state: &mut MainState,
     show_help: bool,
-    logger_state: &TuiWidgetState,
     config: &Config,
+    log_state: &Logger,
 ) -> Result<(), anyhow::Error>
 where
     B: Backend,
@@ -111,9 +111,8 @@ where
         f.render_stateful_widget(right_block, chunks_top[1], &mut state.details_state);
 
         // Log block
-        let mut log_widget = render_logs(config);
-        log_widget.state(logger_state);
-        f.render_widget(log_widget, chunks[1]);
+        let log_block = render_logs(config, log_state);
+        f.render_widget(log_block, chunks[1]);
 
         // Render popup
         match state.focus {

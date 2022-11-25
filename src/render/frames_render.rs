@@ -4,10 +4,10 @@ use tui::{
     terminal::Terminal,
     widgets::{Block, Borders, List, ListItem},
 };
-use tui_logger::TuiWidgetState;
 
 use crate::{
     config::Config,
+    logger::Logger,
     render::{help_render::render_help, inactive_list_item, list_item, logs_render::render_logs},
     state::{frame_data::SUPPORTED_FRAMES, frames_state::FramesState},
 };
@@ -18,8 +18,8 @@ pub fn render_frames<B>(
     terminal: &mut Terminal<B>,
     state: &mut FramesState,
     show_help: bool,
-    logger_state: &TuiWidgetState,
     config: &Config,
+    log_state: &Logger,
 ) -> Result<(), anyhow::Error>
 where
     B: Backend,
@@ -69,9 +69,8 @@ where
         f.render_widget(description_block, chunks_top[1]);
 
         // Log block
-        let mut log_widget = render_logs(config);
-        log_widget.state(logger_state);
-        f.render_widget(log_widget, chunks[1]);
+        let log_block = render_logs(config, log_state);
+        f.render_widget(log_block, chunks[1]);
 
         if show_help {
             render_help(f, &HELP_TEXT, config);

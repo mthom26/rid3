@@ -1,4 +1,4 @@
-use std::{env, io, path::PathBuf, time::Duration};
+use std::{env, io, path::PathBuf, sync::Mutex, time::Duration};
 
 use crossterm::{
     event::{self, Event, KeyCode},
@@ -15,15 +15,21 @@ use tui_logger::{TuiWidgetEvent, TuiWidgetState};
 
 mod args;
 mod config;
+mod logger;
 mod render;
 mod state;
 mod util;
 use args::get_args;
 use config::Config;
+use logger::Logger;
 use render::{files_render::render_files, frames_render::render_frames, main_render::render_main};
 use state::{
     files_state::FilesState, frames_state::FramesState, main_state::MainState, AppEvent,
     ScreenState,
+};
+
+static LOGGER: Logger = Logger {
+    items: Mutex::new(Vec::new()),
 };
 
 #[tokio::main]
@@ -41,8 +47,8 @@ async fn main() -> Result<(), anyhow::Error> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    tui_logger::init_logger(LevelFilter::Debug).unwrap();
-    tui_logger::set_default_level(LevelFilter::Debug);
+    log::set_logger(&LOGGER).unwrap();
+    log::set_max_level(LevelFilter::Trace);
 
     let config = Config::new();
 
@@ -89,26 +95,18 @@ async fn main() -> Result<(), anyhow::Error> {
     loop {
         // Render
         match screen_state {
-            ScreenState::Main => render_main(
-                &mut terminal,
-                &mut main_state,
-                show_help,
-                &logger_state,
-                &config,
-            )?,
-            ScreenState::Files => render_files(
-                &mut terminal,
-                &mut files_state,
-                show_help,
-                &logger_state,
-                &config,
-            )?,
+            ScreenState::Main => {
+                render_main(&mut terminal, &mut main_state, show_help, &config, &LOGGER)?
+            }
+            ScreenState::Files => {
+                render_files(&mut terminal, &mut files_state, show_help, &config, &LOGGER)?
+            }
             ScreenState::Frames => render_frames(
                 &mut terminal,
                 &mut frames_state,
                 show_help,
-                &logger_state,
                 &config,
+                &LOGGER,
             )?,
         }
 
@@ -155,6 +153,11 @@ async fn main() -> Result<(), anyhow::Error> {
 
     crossterm::terminal::disable_raw_mode()?;
     terminal.backend_mut().execute(LeaveAlternateScreen)?;
+
+    // let logs = LOGGER.items.lock().unwrap();
+    // for i in logs.iter() {
+    //     println!("{:?}", i);
+    // }
 
     Ok(())
 }
