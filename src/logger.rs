@@ -41,11 +41,16 @@ impl Log for Logger {
                 level: record.level(),
                 msg: record.args().to_string(),
             };
-            self.items
-                .lock()
-                .expect("Could not acquire lock")
-                .push(record);
-            // TODO - Adjust index so new logs are displayed
+
+            let items = &mut *self.items.lock().unwrap();
+            items.push(record);
+            // Adjust index so new logs are displayed as they are added
+            let mut index = self.index.lock().unwrap();
+            let i = *index;
+            if items.len() - i > 8 { // 8 is the current height of the log window rendered
+                // *index += 1;
+                *index = items.len() - 8;
+            }
         }
     }
 
