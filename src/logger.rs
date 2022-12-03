@@ -47,7 +47,8 @@ impl Log for Logger {
             // Adjust index so new logs are displayed as they are added
             let mut index = self.index.lock().unwrap();
             let i = *index;
-            if items.len() - i > 8 { // 8 is the current height of the log window rendered
+            if items.len() - i > 8 {
+                // 8 is the current height of the log window rendered
                 // *index += 1;
                 *index = items.len() - 8;
             }

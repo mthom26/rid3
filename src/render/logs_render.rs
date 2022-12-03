@@ -43,5 +43,6 @@ pub fn render_logs<'a>(config: &Config, log_state: &Logger) -> List<'a> {
             .collect()
     };
 
-    List::new(log_items).block(Block::default().title("Log").borders(Borders::ALL))
+    let title = format!("Logs {}/{}", index + 1, last_index + 1);
+    List::new(log_items).block(Block::default().title(title).borders(Borders::ALL))
 }
