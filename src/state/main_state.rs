@@ -2,7 +2,7 @@ use std::{fs, path::PathBuf};
 
 use crossterm::event::{KeyCode, KeyEvent};
 use id3::{frame::ExtendedText, Content, Frame, Tag, TagLike, Version};
-use log::{debug, warn};
+use log::{debug, info, warn};
 use tui::widgets::ListState;
 
 use crate::state::{frame_data::id_to_name, update_screen_state, AppEvent};
@@ -454,7 +454,7 @@ impl MainState {
     }
 
     pub fn add_frame(&mut self, id: &str) {
-        debug!("Adding frame {}", id);
+        info!("Adding frame {}", id);
         let frame = match id {
             "TXXX" => Frame::with_content(
                 id,
@@ -560,6 +560,7 @@ impl MainState {
 
     // Write updated tags to files
     fn write_tags(&mut self) -> Result<(), anyhow::Error> {
+        info!("Writing tags to files...");
         for entry in self.files.iter_mut() {
             entry.tag.write_to_path(&entry.path, Version::Id3v24)?;
 
@@ -571,6 +572,7 @@ impl MainState {
             entry.path = new_path;
         }
 
+        info!("New tags written");
         Ok(())
     }
 
@@ -640,6 +642,7 @@ impl MainState {
                 entry.filename = new_filename;
             }
         }
+        info!("Updating selected filenames");
         self.update_details();
     }
 }

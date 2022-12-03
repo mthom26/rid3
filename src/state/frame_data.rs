@@ -1,5 +1,3 @@
-use log::debug;
-
 // Frames that are currently supported by the program
 pub static SUPPORTED_FRAMES: [FrameData; 6] = [
     FrameData {
@@ -42,7 +40,7 @@ pub struct FrameData {
 }
 
 pub fn id_to_name(id: &str) -> Result<String, String> {
-    debug!("id_to_name: {}", id);
+    // debug!("id_to_name: {}", id);
     match id {
         "TIT2" => Ok("Title".to_string()),
         "TALB" => Ok("Album".to_string()),
