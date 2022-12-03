@@ -11,7 +11,6 @@ use tokio::{
     time::sleep,
 };
 use tui::{backend::CrosstermBackend, Terminal};
-use tui_logger::{TuiWidgetEvent, TuiWidgetState};
 
 mod args;
 mod config;
@@ -30,6 +29,7 @@ use state::{
 
 static LOGGER: Logger = Logger {
     items: Mutex::new(Vec::new()),
+    index: Mutex::new(0),
 };
 
 #[tokio::main]
@@ -57,8 +57,6 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut main_state = MainState::new();
     let mut files_state = FilesState::new(dir)?;
     let mut frames_state = FramesState::new();
-
-    let mut logger_state = TuiWidgetState::new();
 
     let (input_tx, mut input_rx) = mpsc::channel(32);
     let (timer_tx, mut timer_rx) = mpsc::channel(32);
@@ -114,8 +112,8 @@ async fn main() -> Result<(), anyhow::Error> {
             key = input_rx.recv() => {
                 let key = key.unwrap();
                 match key.code {
-                    KeyCode::PageUp => logger_state.transition(&TuiWidgetEvent::PrevPageKey),
-                    KeyCode::PageDown => logger_state.transition(&TuiWidgetEvent::NextPageKey),
+                    KeyCode::PageUp => LOGGER.prev(),
+                    KeyCode::PageDown => LOGGER.next(),
                     _ => {}
                 }
                 match screen_state {

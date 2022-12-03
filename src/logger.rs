@@ -9,8 +9,25 @@ pub struct LogRecord {
 }
 
 pub struct Logger {
-    // TODO - Enable scrolling through list
     pub items: Mutex<Vec<LogRecord>>,
+    pub index: Mutex<usize>,
+}
+
+impl Logger {
+    pub fn next(&self) {
+        let len = self.items.lock().expect("Could not acquire lock").len();
+        let index = *self.index.lock().expect("Could not acquire lock");
+        if len > 0 && index < len - 1 {
+            *self.index.lock().expect("Could not acquire lock") = index + 1;
+        }
+    }
+
+    pub fn prev(&self) {
+        let index = *self.index.lock().expect("Could not acquire lock");
+        if index > 0 {
+            *self.index.lock().expect("Could not acquire lock") = index - 1;
+        }
+    }
 }
 
 impl Log for Logger {
@@ -28,6 +45,7 @@ impl Log for Logger {
                 .lock()
                 .expect("Could not acquire lock")
                 .push(record);
+            // TODO - Adjust index so new logs are displayed
         }
     }
 
