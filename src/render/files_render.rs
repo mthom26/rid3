@@ -9,23 +9,18 @@ use tui::{
 use crate::{
     config::Config,
     logger::Logger,
-    render::{help_render::render_help, inactive_list_item, logs_render::render_logs},
-    state::files_state::FilesState,
+    render::inactive_list_item,
+    state::files_state::{FilesState, FilesStateItem},
 };
 
-const HELP_TEXT: [&str; 4] = [
-    "`q` - Quit",
-    "`b` - Change to parent directory",
-    "`s` - Add highlighted file",
-    "`a` - Add all files",
-];
+use crate::render::{logs::render_logs, render_popup};
 
-pub fn render_files<B>(
+pub fn files_render<B>(
     terminal: &mut Terminal<B>,
-    state: &mut FilesState,
-    show_help: bool,
-    config: &Config,
     log_state: &Logger,
+    config: &Config,
+    show_logs: bool,
+    state: &mut FilesState,
 ) -> Result<(), anyhow::Error>
 where
     B: Backend,
@@ -33,22 +28,35 @@ where
     terminal.draw(|f| {
         let size = f.size();
 
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Min(0), Constraint::Length(10)].as_ref())
-            .split(size);
+        let chunks = if show_logs {
+            Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Min(0), Constraint::Length(10)].as_ref())
+                .split(size)
+        } else {
+            Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Min(0), Constraint::Length(0)].as_ref())
+                .split(size)
+        };
 
-        let mut items = vec![ListItem::new("../").style(Style::default().fg(Color::LightGreen))];
+        let mut items = vec![];
         for entry in state.files.iter() {
-            let text = entry
-                .file_name()
-                .into_string()
-                .expect("Could not parse OsString");
-
-            let style = if entry.file_type().unwrap().is_dir() {
-                Style::default().fg(Color::LightBlue)
-            } else {
-                Style::default().fg(Color::LightGreen)
+            let (text, style) = match entry {
+                FilesStateItem::DirEntry(entry) => (
+                    entry
+                        .file_name()
+                        .into_string()
+                        .expect("Could not parse OsString"),
+                    if entry.file_type().unwrap().is_dir() {
+                        Style::default().fg(Color::LightBlue)
+                    } else {
+                        Style::default().fg(Color::LightGreen)
+                    },
+                ),
+                FilesStateItem::Parent => {
+                    ("../".to_owned(), Style::default().fg(Color::LightYellow))
+                }
             };
 
             items.push(ListItem::new(text).style(style));
@@ -60,12 +68,15 @@ where
 
         f.render_stateful_widget(block, chunks[0], &mut state.files_state);
 
-        // Log block
-        let log_block = render_logs(config, log_state);
-        f.render_widget(log_block, chunks[1]);
+        // Logs
+        if show_logs {
+            let log_block = render_logs(config, log_state);
+            f.render_widget(log_block, chunks[1]);
+        }
 
-        if show_help {
-            render_help(f, &HELP_TEXT, config);
+        // Popup
+        if let Some(popup) = state.popup_widget() {
+            render_popup(size, f, popup);
         }
     })?;
 

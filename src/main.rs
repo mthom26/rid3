@@ -15,13 +15,14 @@ use tui::{backend::CrosstermBackend, Terminal};
 mod args;
 mod config;
 mod logger;
+mod popups;
 mod render;
 mod state;
 mod util;
 use args::get_args;
 use config::Config;
 use logger::Logger;
-use render::{files_render::render_files, frames_render::render_frames, main_render::render_main};
+use render::{files_render::files_render, frames_render::frames_render, main_render::main_render};
 use state::{
     files_state::FilesState, frames_state::FramesState, main_state::MainState, AppEvent,
     ScreenState,
@@ -43,7 +44,6 @@ async fn main() -> Result<(), anyhow::Error> {
     crossterm::terminal::enable_raw_mode()?;
     let mut stdout = io::stdout();
     stdout.execute(EnterAlternateScreen)?;
-
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
@@ -53,10 +53,10 @@ async fn main() -> Result<(), anyhow::Error> {
     let config = Config::new();
 
     let mut screen_state = ScreenState::Main;
-    let mut show_help = false;
     let mut main_state = MainState::new();
     let mut files_state = FilesState::new(dir)?;
     let mut frames_state = FramesState::new();
+    let mut show_logs = true;
 
     let (input_tx, mut input_rx) = mpsc::channel(32);
     let (timer_tx, mut timer_rx) = mpsc::channel(32);
@@ -94,24 +94,27 @@ async fn main() -> Result<(), anyhow::Error> {
         // Render
         match screen_state {
             ScreenState::Main => {
-                render_main(&mut terminal, &mut main_state, show_help, &config, &LOGGER)?
+                main_render(&mut terminal, &LOGGER, &config, show_logs, &mut main_state)?;
             }
             ScreenState::Files => {
-                render_files(&mut terminal, &mut files_state, show_help, &config, &LOGGER)?
+                files_render(&mut terminal, &LOGGER, &config, show_logs, &mut files_state)?;
             }
-            ScreenState::Frames => render_frames(
-                &mut terminal,
-                &mut frames_state,
-                show_help,
-                &config,
-                &LOGGER,
-            )?,
+            ScreenState::Frames => {
+                frames_render(
+                    &mut terminal,
+                    &LOGGER,
+                    &config,
+                    show_logs,
+                    &mut frames_state,
+                )?;
+            }
         }
 
         tokio::select! {
             key = input_rx.recv() => {
                 let key = key.unwrap();
                 match key.code {
+                    KeyCode::Char('l') => show_logs = !show_logs,
                     KeyCode::PageUp => LOGGER.prev(),
                     KeyCode::PageDown => LOGGER.next(),
                     _ => {}
@@ -119,25 +122,19 @@ async fn main() -> Result<(), anyhow::Error> {
                 match screen_state {
                     ScreenState::Main => match main_state.handle_input(&key) {
                         AppEvent::Quit => break,
-                        AppEvent::NewScreenState(s) => screen_state = s,
-                        AppEvent::ToggleHelp => show_help = !show_help,
-                        AppEvent::HideHelp => show_help = false,
+                        AppEvent::SwitchScreen(s) => screen_state = s,
                         _ => {}
-                    },
-                    ScreenState::Files => match files_state.handle_input(&key) {
+                    }
+                    ScreenState::Files => match files_state.handle_input(&key){
                         AppEvent::Quit => break,
-                        AppEvent::NewScreenState(s) => screen_state = s,
-                        AppEvent::AddFiles(mut tags) => main_state.add_files(&mut tags),
-                        AppEvent::ToggleHelp => show_help = !show_help,
-                        AppEvent::HideHelp => show_help = false,
+                        AppEvent::SwitchScreen(s) => screen_state = s,
+                        AppEvent::AddFiles(files) => main_state.add_files(files),
                         _ => {}
-                    },
+                    }
                     ScreenState::Frames => match frames_state.handle_input(&key) {
                         AppEvent::Quit => break,
-                        AppEvent::NewScreenState(s) => screen_state = s,
-                        AppEvent::ToggleHelp => show_help = !show_help,
-                        AppEvent::HideHelp => show_help = false,
-                        AppEvent::AddFrame(id) => main_state.add_frame(id),
+                        AppEvent::SwitchScreen(s) => screen_state = s,
+                        AppEvent::AddFrame(frame_id) => main_state.add_frame(frame_id),
                         _ => {}
                     }
                 }
