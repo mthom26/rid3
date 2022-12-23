@@ -1,15 +1,17 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use log::warn;
-use tui::widgets::{Block, Borders, List, ListItem};
+use tui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph};
 
 use crate::state::AppEvent;
 
 pub mod help;
+pub mod single_input;
 
 pub enum PopupRender<'a> {
     One(List<'a>),
     Two(Block<'a>),
     Help(List<'a>),
+    SingleInput((List<'a>, Paragraph<'a>, ListState, usize)),
 }
 
 pub trait Popup {

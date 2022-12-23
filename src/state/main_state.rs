@@ -6,7 +6,7 @@ use log::{info, warn};
 use tui::widgets::ListState;
 
 use crate::{
-    popups::{help::HelpPopup, Popup},
+    popups::{help::HelpPopup, single_input::SingleInput, Popup},
     state::{update_screen_state, AppEvent, ScreenState},
     util,
 };
@@ -116,6 +116,7 @@ impl MainState {
                 KeyCode::Up => self.prev(),
                 KeyCode::Down => self.next(),
                 KeyCode::Tab => self.switch_focus(),
+                KeyCode::Enter => self.spawn_popup(),
                 _ => {}
             }
         }
@@ -333,6 +334,22 @@ impl MainState {
         }
 
         self.update_details();
+    }
+
+    fn spawn_popup(&mut self) {
+        if let Some(i) = self.details_state.selected() {
+            match &self.details[i] {
+                DetailItem::FileName(file_name) => {
+                    let popup = SingleInput::new(&file_name);
+                    self.popup_stack.push(Box::new(popup));
+                }
+                DetailItem::Frame(frame) => {
+                    let text = frame.content().text().expect("Could not get frame text");
+                    let popup = SingleInput::new(text);
+                    self.popup_stack.push(Box::new(popup));
+                }
+            }
+        }
     }
 
     pub fn popup_widget(&self) -> Option<&Box<dyn Popup>> {
