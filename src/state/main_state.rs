@@ -113,7 +113,45 @@ impl MainState {
                             }
                         }
                         PopupData::DoubleInput(description, value) => {
-                            // TODO
+                            let (prev_description, id, i) =
+                                if let Some(i) = self.details_state.selected() {
+                                    if let DetailItem::Frame(frame) = &self.details[i] {
+                                        (
+                                            frame
+                                                .content()
+                                                .extended_text()
+                                                .unwrap()
+                                                .description
+                                                .clone(),
+                                            frame.id(),
+                                            i,
+                                        )
+                                    } else {
+                                        unreachable!()
+                                    }
+                                } else {
+                                    unreachable!()
+                                };
+
+                            if description.is_empty() || value.is_empty() {
+                                warn!("User defined text frame contained an empty field, not adding new frame");
+                                return AppEvent::None;
+                            }
+
+                            let content = Content::ExtendedText(ExtendedText {
+                                description: description.clone(),
+                                value,
+                            });
+                            let new_frame = Frame::with_content(id, content);
+                            self.details[i] = DetailItem::Frame(new_frame.clone());
+
+                            // If an existing TXXX frame is edited and given a new description
+                            // the old frame persists as a track can have multiple TXXX frames
+                            // with unique descriptions
+                            if prev_description != description {
+                                self.remove_old_txxx_frame(&prev_description);
+                            }
+                            self.update_files(new_frame);
                         }
                     }
                 }
@@ -254,6 +292,19 @@ impl MainState {
         }
         self.update_details();
         self.next();
+    }
+
+    fn remove_old_txxx_frame(&mut self, description: &str) {
+        for file in &mut self.files {
+            if file.selected {
+                file.tag.remove_extended_text(Some(&description), None);
+            }
+        }
+        if let Some(i) = self.files_state.selected() {
+            self.files[i]
+                .tag
+                .remove_extended_text(Some(&description), None);
+        }
     }
 
     // Toggle selection of highlighted entry
