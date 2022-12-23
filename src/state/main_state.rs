@@ -6,7 +6,9 @@ use log::{info, warn};
 use tui::widgets::ListState;
 
 use crate::{
-    popups::{help::HelpPopup, single_input::SingleInput, Popup},
+    popups::{
+        double_input::DoubleInput, help::HelpPopup, single_input::SingleInput, Popup, PopupData,
+    },
     state::{update_screen_state, AppEvent, ScreenState},
     util,
 };
@@ -81,8 +83,39 @@ impl MainState {
         if let Some(popup) = self.popup_stack.last_mut() {
             match popup.handle_input(key) {
                 AppEvent::ClosePopup => {
-                    // Need to return relevant data from popup here, probably another enum...
-                    let _p = self.popup_stack.pop().unwrap();
+                    let _ = self.popup_stack.pop().unwrap();
+                }
+                AppEvent::ClosePopupData(data) => {
+                    let _ = self.popup_stack.pop().unwrap();
+                    match data {
+                        PopupData::SingleInput(text) => {
+                            if text.is_empty() {
+                                warn!("Text frame contained an empty field, not adding new frame");
+                                return AppEvent::None;
+                            }
+
+                            match self.details_state.selected() {
+                                Some(i) => {
+                                    match &self.details[i] {
+                                        DetailItem::FileName(f) => {
+                                            // TODO
+                                        }
+                                        DetailItem::Frame(frame) => {
+                                            let id = frame.id();
+                                            let new_frame = Frame::text(id, text);
+                                            self.details[i] = DetailItem::Frame(new_frame.clone());
+                                            // Propagate frame changes to selected files
+                                            self.update_files(new_frame);
+                                        }
+                                    }
+                                }
+                                None => unreachable!(),
+                            }
+                        }
+                        PopupData::DoubleInput(description, value) => {
+                            // TODO
+                        }
+                    }
                 }
                 AppEvent::SwitchScreen(s) => return update_screen_state(s),
                 _ => {}
@@ -208,6 +241,19 @@ impl MainState {
             .collect();
         // TODO - This causes a panic when all files are deleted
         self.update_details();
+    }
+
+    fn update_files(&mut self, new_frame: Frame) {
+        for file in &mut self.files {
+            if file.selected {
+                file.tag.add_frame(new_frame.clone());
+            }
+        }
+        if let Some(i) = self.files_state.selected() {
+            self.files[i].tag.add_frame(new_frame);
+        }
+        self.update_details();
+        self.next();
     }
 
     // Toggle selection of highlighted entry
@@ -343,11 +389,24 @@ impl MainState {
                     let popup = SingleInput::new(&file_name);
                     self.popup_stack.push(Box::new(popup));
                 }
-                DetailItem::Frame(frame) => {
-                    let text = frame.content().text().expect("Could not get frame text");
-                    let popup = SingleInput::new(text);
-                    self.popup_stack.push(Box::new(popup));
-                }
+                DetailItem::Frame(frame) => match frame.id() {
+                    "TXXX" => {
+                        let default_text = ExtendedText {
+                            description: "".to_string(),
+                            value: "".to_string(),
+                        };
+                        let text = frame.content().extended_text().unwrap_or(&default_text);
+
+                        let popup = DoubleInput::new(&text.description, &text.value);
+                        self.popup_stack.push(Box::new(popup));
+                    }
+                    t if t.starts_with("T") => {
+                        let text = frame.content().text().expect("Could not get frame text");
+                        let popup = SingleInput::new(text);
+                        self.popup_stack.push(Box::new(popup));
+                    }
+                    id => warn!("Unhandled frame type: {}", id),
+                },
             }
         }
     }

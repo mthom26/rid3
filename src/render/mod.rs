@@ -68,6 +68,16 @@ where
             f.render_widget(input, chunks[1]);
             f.set_cursor(chunks[1].x + cursor_pos as u16 + 1, chunks[1].y + 1);
         }
+        PopupRender::DoubleInput((list, input, mut state, cursor_pos)) => {
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Min(1), Constraint::Length(3)].as_ref())
+                .split(chunks_vertical[1]);
+
+            f.render_stateful_widget(list, chunks[0], &mut state);
+            f.render_widget(input, chunks[1]);
+            f.set_cursor(chunks[1].x + cursor_pos as u16 + 1, chunks[1].y + 1);
+        }
     }
 }
 

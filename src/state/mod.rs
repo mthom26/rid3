@@ -4,10 +4,13 @@ pub mod frames_state;
 pub mod main_state;
 use main_state::Entry;
 
+use crate::popups::PopupData;
+
 pub enum AppEvent {
     AddFiles(Vec<Entry>),
     AddFrame(&'static str),
     SwitchScreen(ScreenState),
+    ClosePopupData(PopupData),
     ClosePopup,
     Quit,
     None,

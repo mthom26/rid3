@@ -5,7 +5,7 @@ use tui::{
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
 };
 
-use crate::popups::{Popup, PopupRender};
+use crate::popups::{Popup, PopupData, PopupRender};
 use crate::state::AppEvent;
 
 pub struct SingleInput {
@@ -51,9 +51,25 @@ impl SingleInput {
 impl Popup for SingleInput {
     fn handle_input(&mut self, key: &crossterm::event::KeyEvent) -> AppEvent {
         match key.code {
-            KeyCode::Esc => AppEvent::ClosePopup,
-            _ => AppEvent::None,
+            KeyCode::Esc => return AppEvent::ClosePopup,
+            KeyCode::Backspace => {
+                if self.cursor_pos > 0 {
+                    self.input.remove(self.cursor_pos - 1);
+                }
+                self.decrement_cursor_pos();
+            }
+            KeyCode::Left => self.decrement_cursor_pos(),
+            KeyCode::Right => self.increment_cursor_pos(),
+            KeyCode::Enter => {
+                return AppEvent::ClosePopupData(PopupData::SingleInput(self.input.clone()))
+            }
+            KeyCode::Char(c) => {
+                self.input.insert(self.cursor_pos, c);
+                self.increment_cursor_pos();
+            }
+            _ => {}
         }
+        AppEvent::None
     }
 
     fn get_widget(&self) -> PopupRender {

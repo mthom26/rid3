@@ -4,6 +4,7 @@ use tui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph};
 
 use crate::state::AppEvent;
 
+pub mod double_input;
 pub mod help;
 pub mod single_input;
 
@@ -12,6 +13,12 @@ pub enum PopupRender<'a> {
     Two(Block<'a>),
     Help(List<'a>),
     SingleInput((List<'a>, Paragraph<'a>, ListState, usize)),
+    DoubleInput((List<'a>, Paragraph<'a>, ListState, usize)),
+}
+
+pub enum PopupData {
+    SingleInput(String),
+    DoubleInput(String, String),
 }
 
 pub trait Popup {
