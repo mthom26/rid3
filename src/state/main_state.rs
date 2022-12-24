@@ -1,7 +1,7 @@
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 
 use crossterm::event::{KeyCode, KeyEvent};
-use id3::{frame::ExtendedText, Content, Frame, Tag, TagLike};
+use id3::{frame::ExtendedText, Content, Frame, Tag, TagLike, Version};
 use log::{info, warn};
 use tui::widgets::ListState;
 
@@ -165,6 +165,7 @@ impl MainState {
                 KeyCode::Char('3') => return update_screen_state(ScreenState::Frames),
                 KeyCode::Char('c') => self.remove_all_files(),
                 KeyCode::Char('q') => return AppEvent::Quit,
+                KeyCode::Char('w') => self.write_tags().expect("Could not write tags"),
                 KeyCode::Char('s') => match self.focus {
                     Focus::Files => self.select_entry(),
                     _ => {}
@@ -408,6 +409,8 @@ impl MainState {
     }
 
     // Remove selected frame from all selected files
+    // TODO - Currently this removes all `TXXX` frames instead of just the
+    //        highlighted one, need to fix this
     fn remove_frames(&mut self) {
         let id = if let Some(i) = self.details_state.selected() {
             match &self.details[i] {
@@ -460,6 +463,24 @@ impl MainState {
                 },
             }
         }
+    }
+
+    // Write updated tags to files
+    fn write_tags(&mut self) -> Result<(), anyhow::Error> {
+        info!("Writing tags to files...");
+        for entry in self.files.iter_mut() {
+            entry.tag.write_to_path(&entry.path, Version::Id3v24)?;
+
+            // Rename the file, for now the extension must be included
+            // when the user enters the new filename
+            let mut new_path = entry.path.clone();
+            new_path.set_file_name(&entry.filename);
+            fs::rename(&entry.path, &new_path)?;
+            entry.path = new_path;
+        }
+
+        info!("New tags written");
+        Ok(())
     }
 
     pub fn popup_widget(&self) -> Option<&Box<dyn Popup>> {
