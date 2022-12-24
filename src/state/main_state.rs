@@ -278,8 +278,14 @@ impl MainState {
             .filter(|file| !file.selected)
             .map(|file| file.clone())
             .collect();
-        // TODO - This causes a panic when all files are deleted
-        self.update_details();
+
+        if self.files.is_empty() {
+            self.details.clear();
+            self.files_state = ListState::default();
+            self.details_state = ListState::default();
+        } else {
+            self.update_details();
+        }
     }
 
     fn update_files(&mut self, new_frame: Frame) {
