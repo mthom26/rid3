@@ -284,6 +284,12 @@ impl MainState {
             self.files_state = ListState::default();
             self.details_state = ListState::default();
         } else {
+            // Check old `files_state` isn't referring to an index outside `files` new length
+            if let Some(i) = self.files_state.selected() {
+                if self.files.len() < i {
+                    self.files_state.select(Some(0));
+                }
+            }
             self.update_details();
         }
     }
@@ -352,7 +358,6 @@ impl MainState {
             }
         };
 
-        // TODO - Fix panic here when `remove_files` is called and files is zero length
         let file_name = self.files[index].filename.clone();
         let mut new_details = vec![DetailItem::FileName(file_name)];
         for frame in self.files[index].tag.frames() {
