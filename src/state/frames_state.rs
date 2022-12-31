@@ -40,15 +40,8 @@ impl FramesState {
                 KeyCode::Char('2') => return update_screen_state(ScreenState::Files),
                 KeyCode::Char('3') => return update_screen_state(ScreenState::Frames),
                 KeyCode::Char('q') => return AppEvent::Quit,
-                // KeyCode::Char('h') => return AppEvent::ToggleHelp,
                 KeyCode::Char('a') => return AppEvent::AddFrame(self.frame_id()),
-                KeyCode::Char('h') => {
-                    let help = Box::new(HelpPopup::new(
-                        "Frames Help".to_owned(),
-                        vec!["Hello".to_owned(), "Frames Help".to_owned()],
-                    ));
-                    self.popup_stack.push(help);
-                }
+                KeyCode::Char('h') => self.popup_stack.push(get_help_popup()),
                 KeyCode::Up => self.prev(),
                 KeyCode::Down => self.next(),
                 _ => {}
@@ -83,4 +76,14 @@ impl FramesState {
     pub fn popup_widget(&self) -> Option<&Box<dyn Popup>> {
         self.popup_stack.last()
     }
+}
+
+fn get_help_popup() -> Box<HelpPopup> {
+    Box::new(HelpPopup::new(
+        "Main Help".to_owned(),
+        vec![
+            "`q` - Quit".to_owned(),
+            "`a` - Add selected frame".to_owned(),
+        ],
+    ))
 }

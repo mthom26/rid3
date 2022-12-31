@@ -178,13 +178,7 @@ impl MainState {
                     Focus::Files => self.remove_files(),
                     Focus::Details => self.remove_frames(),
                 },
-                KeyCode::Char('h') => {
-                    let help = Box::new(HelpPopup::new(
-                        "Main Help".to_owned(),
-                        vec!["Hello".to_owned(), "Main Help".to_owned()],
-                    ));
-                    self.popup_stack.push(help);
-                }
+                KeyCode::Char('h') => self.popup_stack.push(get_help_popup()),
                 KeyCode::Up => self.prev(),
                 KeyCode::Down => self.next(),
                 KeyCode::Tab => self.switch_focus(),
@@ -497,4 +491,19 @@ impl MainState {
     pub fn popup_widget(&self) -> Option<&Box<dyn Popup>> {
         self.popup_stack.last()
     }
+}
+
+fn get_help_popup() -> Box<HelpPopup> {
+    Box::new(HelpPopup::new(
+        "Main Help".to_owned(),
+        vec![
+            "`q` - Quit".to_owned(),
+            "`c` - Remove all files".to_owned(),
+            "`d` - Remove selected files/frame".to_owned(),
+            "`s` - Select highlighted file".to_owned(),
+            "`a` - Select/Deselect all files".to_owned(),
+            "`u` - Update file names".to_owned(),
+            "`w` - Write changes".to_owned(),
+        ],
+    ))
 }

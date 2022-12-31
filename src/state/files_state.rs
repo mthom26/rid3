@@ -65,13 +65,7 @@ impl FilesState {
                 KeyCode::Char('a') => return self.add_all_files().expect("Could not add files"),
                 KeyCode::Char('s') => return self.add_file().expect("Could not add file"),
                 KeyCode::Char('b') => self.parent_dir().expect("Could not enter parent directory"),
-                KeyCode::Char('h') => {
-                    let help = Box::new(HelpPopup::new(
-                        "Files Help".to_owned(),
-                        vec!["Hello".to_owned(), "Files Help".to_owned()],
-                    ));
-                    self.popup_stack.push(help);
-                }
+                KeyCode::Char('h') => self.popup_stack.push(get_help_popup()),
                 KeyCode::Up => self.prev(),
                 KeyCode::Down => self.next(),
                 KeyCode::Enter => {
@@ -250,4 +244,16 @@ pub fn sort_files(files: &mut Vec<FilesStateItem>) {
             _ => unreachable!(),
         }
     });
+}
+
+fn get_help_popup() -> Box<HelpPopup> {
+    Box::new(HelpPopup::new(
+        "Main Help".to_owned(),
+        vec![
+            "`q` - Quit".to_owned(),
+            "`b` - Change to parent directory".to_owned(),
+            "`s` - Add highlighted file".to_owned(),
+            "`a` - Add all files".to_owned(),
+        ],
+    ))
 }
