@@ -97,8 +97,9 @@ impl MainState {
                             match self.details_state.selected() {
                                 Some(i) => {
                                     match &self.details[i] {
-                                        DetailItem::FileName(f) => {
-                                            // TODO
+                                        DetailItem::FileName(_) => {
+                                            self.details[i] = DetailItem::FileName(text.clone());
+                                            self.update_filename(text);
                                         }
                                         DetailItem::Frame(frame) => {
                                             let id = frame.id();
@@ -370,6 +371,18 @@ impl MainState {
                 self.details_state.select(Some(0));
             }
         }
+    }
+
+    fn update_filename(&mut self, name: String) {
+        let index = match self.files_state.selected() {
+            Some(i) => i,
+            None => {
+                warn!("files_state not selected");
+                return;
+            }
+        };
+
+        self.files[index].filename = name;
     }
 
     fn switch_focus(&mut self) {
