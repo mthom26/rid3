@@ -49,12 +49,6 @@ where
 
     let w = popup.get_widget();
     match w {
-        PopupRender::One(list) => {
-            f.render_widget(list, chunks_vertical[1]);
-        }
-        PopupRender::Two(block) => {
-            f.render_widget(block, chunks_vertical[1]);
-        }
         PopupRender::Help(help) => {
             f.render_widget(help, chunks_vertical[1]);
         }
