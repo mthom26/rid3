@@ -13,14 +13,14 @@ use tokio::{
 use tui::{backend::CrosstermBackend, Terminal};
 
 mod args;
-mod config;
+mod configuration;
 mod logger;
 mod popups;
 mod render;
 mod state;
 mod util;
 use args::get_args;
-use config::Config;
+use configuration::Config;
 use logger::Logger;
 use render::{files_render::files_render, frames_render::frames_render, main_render::main_render};
 use state::{
@@ -50,7 +50,7 @@ async fn main() -> Result<(), anyhow::Error> {
     log::set_logger(&LOGGER).unwrap();
     log::set_max_level(LevelFilter::Trace);
 
-    let config = Config::new();
+    let app_config = Config::new();
 
     let mut screen_state = ScreenState::Main;
     let mut main_state = MainState::new();
@@ -94,16 +94,28 @@ async fn main() -> Result<(), anyhow::Error> {
         // Render
         match screen_state {
             ScreenState::Main => {
-                main_render(&mut terminal, &LOGGER, &config, show_logs, &mut main_state)?;
+                main_render(
+                    &mut terminal,
+                    &LOGGER,
+                    &app_config,
+                    show_logs,
+                    &mut main_state,
+                )?;
             }
             ScreenState::Files => {
-                files_render(&mut terminal, &LOGGER, &config, show_logs, &mut files_state)?;
+                files_render(
+                    &mut terminal,
+                    &LOGGER,
+                    &app_config,
+                    show_logs,
+                    &mut files_state,
+                )?;
             }
             ScreenState::Frames => {
                 frames_render(
                     &mut terminal,
                     &LOGGER,
-                    &config,
+                    &app_config,
                     show_logs,
                     &mut frames_state,
                 )?;

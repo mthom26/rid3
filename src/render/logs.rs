@@ -5,7 +5,7 @@ use tui::{
     widgets::{Block, Borders, List, ListItem},
 };
 
-use crate::{config::Config, logger::Logger};
+use crate::{configuration::Config, logger::Logger};
 
 pub fn render_logs<'a>(config: &Config, log_state: &Logger) -> List<'a> {
     let index = *log_state.index.lock().expect("Could not acquire lock");

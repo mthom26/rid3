@@ -7,7 +7,7 @@ use tui::{
 };
 
 use crate::{
-    config::Config,
+    configuration::Config,
     logger::Logger,
     render::inactive_list_item,
     state::files_state::{FilesState, FilesStateItem},
@@ -18,7 +18,7 @@ use crate::render::{logs::render_logs, render_popup};
 pub fn files_render<B>(
     terminal: &mut Terminal<B>,
     log_state: &Logger,
-    config: &Config,
+    app_config: &Config,
     show_logs: bool,
     state: &mut FilesState,
 ) -> Result<(), anyhow::Error>
@@ -64,13 +64,13 @@ where
 
         let block = List::new(items)
             .block(Block::default().title("Files").borders(Borders::ALL))
-            .highlight_style(inactive_list_item(config));
+            .highlight_style(inactive_list_item(app_config));
 
         f.render_stateful_widget(block, chunks[0], &mut state.files_state);
 
         // Logs
         if show_logs {
-            let log_block = render_logs(config, log_state);
+            let log_block = render_logs(app_config, log_state);
             f.render_widget(log_block, chunks[1]);
         }
 

@@ -17,3 +17,4 @@ serde = "1.0.139"
 home = "0.5.3"
 clap = "3.2.16"
 colorsys = "0.6.6"
+config = { version = "0.13.3", default-features = false, features = ["toml"] }

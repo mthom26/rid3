@@ -7,7 +7,7 @@ use tui::{
 };
 
 use crate::{
-    config::Config,
+    configuration::Config,
     popups::{Popup, PopupRender},
 };
 
