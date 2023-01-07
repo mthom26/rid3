@@ -1,6 +1,8 @@
+use std::path::PathBuf;
+
 use config::{self, File, FileFormat};
-use home::home_dir;
-use log::warn;
+use directories::ProjectDirs;
+use log::{info, warn};
 use serde::Deserialize;
 use tui::style::Color;
 
@@ -31,45 +33,22 @@ pub struct Config {
 
 impl Config {
     pub fn new() -> Self {
-        match home_dir() {
-            Some(mut path) => {
-                path.push(".config");
-                path.push("rid3");
-                path.push("config.toml");
+        info!("{}", "Building new config");
+        let conf = if let Some(s) = get_config_file_string() {
+            config::Config::builder()
+                .add_source(File::from_str(DEFAULT_CONFIG, FileFormat::Toml))
+                .add_source(File::with_name(&s))
+                .build()
+                .unwrap()
+        } else {
+            config::Config::builder()
+                .add_source(File::from_str(DEFAULT_CONFIG, FileFormat::Toml))
+                .build()
+                .unwrap()
+        };
 
-                let conf = match path.exists() {
-                    true => {
-                        let s = path.into_os_string().into_string().unwrap();
-
-                        config::Config::builder()
-                            .add_source(File::from_str(DEFAULT_CONFIG, FileFormat::Toml))
-                            .add_source(File::with_name(&s))
-                            .build()
-                            .unwrap()
-                    }
-                    false => {
-                        warn!("No config file found. Using default config.");
-
-                        config::Config::builder()
-                            .add_source(File::from_str(DEFAULT_CONFIG, FileFormat::Toml))
-                            .build()
-                            .unwrap()
-                    }
-                };
-
-                // TODO - Handle parsing errors in existing config file instead of unwrapping
-                conf.clone().try_deserialize::<Config>().unwrap()
-            }
-            None => {
-                warn!("No user home directory found. Using default config.");
-                let conf = config::Config::builder()
-                    .add_source(File::from_str(DEFAULT_CONFIG, FileFormat::Toml))
-                    .build()
-                    .unwrap();
-
-                conf.clone().try_deserialize::<Config>().unwrap()
-            }
-        }
+        // TODO - Handle malformed config.toml here instead of unwrapping
+        conf.clone().try_deserialize::<Config>().unwrap()
     }
 
     pub fn list_item_fg(&self) -> Color {
@@ -114,5 +93,29 @@ impl Config {
 
     pub fn log_warn_fg(&self) -> Color {
         self.theme.log_warn_fg.into()
+    }
+}
+
+pub fn get_config_file_string() -> Option<String> {
+    if let Some(dirs) = ProjectDirs::from("rid3", "rid3", "rid3") {
+        let path_buf = dirs.config_dir().join("config.toml");
+
+        if path_buf.exists() {
+            Some(path_buf.into_os_string().into_string().unwrap())
+        } else {
+            warn!("No user config.toml file found. Using default config.");
+            None
+        }
+    } else {
+        warn!("No user config directory found. Using default config.");
+        None
+    }
+}
+
+pub fn get_config_dir() -> Option<PathBuf> {
+    if let Some(dirs) = ProjectDirs::from("rid3", "rid3", "rid3") {
+        Some(PathBuf::from(dirs.config_dir()))
+    } else {
+        None
     }
 }

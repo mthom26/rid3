@@ -14,7 +14,9 @@ tokio = { version = "1.19.2", features = ["rt-multi-thread", "macros", "sync", "
 log = "0.4.17"
 toml = "0.5.9"
 serde = "1.0.139"
-home = "0.5.3"
 clap = "3.2.16"
 colorsys = "0.6.6"
 config = { version = "0.13.3", default-features = false, features = ["toml"] }
+notify = { version = "5.0.0", default-features = false, feature = ["macos_kqueue"] }
+futures = "0.3.25"
+directories = "4.0.1"

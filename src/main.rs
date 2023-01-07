@@ -5,7 +5,9 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
-use log::{debug, LevelFilter};
+use futures;
+use log::{debug, warn, LevelFilter};
+use notify::{self, event::ModifyKind, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use tokio::{
     sync::{mpsc, watch},
     time::sleep,
@@ -20,7 +22,7 @@ mod render;
 mod state;
 mod util;
 use args::get_args;
-use configuration::Config;
+use configuration::{get_config_dir, Config};
 use logger::Logger;
 use render::{files_render::files_render, frames_render::frames_render, main_render::main_render};
 use state::{
@@ -50,7 +52,7 @@ async fn main() -> Result<(), anyhow::Error> {
     log::set_logger(&LOGGER).unwrap();
     log::set_max_level(LevelFilter::Trace);
 
-    let app_config = Config::new();
+    let mut app_config = Config::new();
 
     let mut screen_state = ScreenState::Main;
     let mut main_state = MainState::new();
@@ -60,8 +62,9 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let (input_tx, mut input_rx) = mpsc::channel(32);
     let (timer_tx, mut timer_rx) = mpsc::channel(32);
+    let (config_tx, mut config_rx) = tokio::sync::mpsc::channel(32);
     let (quit_tx, quit_rx) = watch::channel(());
-    let quit_rx1 = quit_rx.clone();
+    let (quit_rx1, quit_rx2) = (quit_rx.clone(), quit_rx.clone());
 
     // Input thread
     tokio::spawn(async move {
@@ -87,6 +90,33 @@ async fn main() -> Result<(), anyhow::Error> {
             if quit_rx1.has_changed().unwrap() {
                 break;
             }
+        }
+    });
+
+    // Watch for changes in config file
+    tokio::spawn(async move {
+        if let Some(path) = get_config_dir() {
+            debug!("Started config file watcher");
+            let mut watcher = RecommendedWatcher::new(
+                move |res| {
+                    futures::executor::block_on(async {
+                        config_tx.send(res).await.unwrap();
+                    })
+                },
+                notify::Config::default(),
+            )
+            .unwrap();
+
+            watcher.watch(&path, RecursiveMode::NonRecursive).unwrap();
+
+            loop {
+                sleep(Duration::from_millis(200)).await;
+                if quit_rx2.has_changed().unwrap() {
+                    break;
+                }
+            }
+        } else {
+            warn!("Could not find user config directory. Not watching for changes.");
         }
     });
 
@@ -149,6 +179,23 @@ async fn main() -> Result<(), anyhow::Error> {
                         AppEvent::AddFrame(frame_id) => main_state.add_frame(frame_id),
                         _ => {}
                     }
+                }
+            }
+            watcher_event = config_rx.recv() => {
+                // TODO - Handle these unwraps properly
+                let event_kind = watcher_event.unwrap().unwrap().kind;
+                // debug!("WATCHER --> {:?}", event_kind);
+                // Different text editors emit many different events when a file is updated
+                // so matching for the `Data()` ModifyKind here should prevent most unnecessary
+                // config rebuilds
+                //
+                // TODO - When using some editors the new config is rebuilt too quickly (before
+                // the new data has actually been written to file). Need to fix this...
+                match event_kind {
+                    EventKind::Modify(ModifyKind::Data(_)) => {
+                        app_config = Config::new();
+                    },
+                    _ => {}
                 }
             }
             _ = timer_rx.recv() => { /* Nothing to do, just proceed to next loop iteration */ }
