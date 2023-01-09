@@ -52,6 +52,10 @@ impl<'de> Visitor<'de> for ColorVisitor {
             "LightMagenta" => Ok(Color(TuiColor::LightMagenta)),
             "LightCyan" => Ok(Color(TuiColor::LightCyan)),
             "White" => Ok(Color(TuiColor::White)),
+            // TODO - The `from_hex_str` function has the potential to extract a hex string
+            //        from a random string - "zzz1zzbzzzzcfzzzz3za" or "LightReed" for example.
+            //        When 3 or 6 valid hex characters are in the string and the last char is a
+            //        valid hex char this will happen.
             s => match Rgb::from_hex_str(s) {
                 Ok(col) => {
                     let rgb: [u8; 3] = col.into();

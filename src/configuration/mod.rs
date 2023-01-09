@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use config::{self, File, FileFormat};
 use directories::ProjectDirs;
-use log::{info, warn};
+use log::{error, info, warn};
 use serde::Deserialize;
 use tui::style::Color;
 
@@ -47,8 +47,18 @@ impl Config {
                 .unwrap()
         };
 
-        // TODO - Handle malformed config.toml here instead of unwrapping
-        conf.clone().try_deserialize::<Config>().unwrap()
+        match conf.clone().try_deserialize::<Config>() {
+            Ok(c) => c,
+            Err(e) => {
+                error!("Using default config - {}", e);
+                config::Config::builder()
+                    .add_source(File::from_str(DEFAULT_CONFIG, FileFormat::Toml))
+                    .build()
+                    .unwrap()
+                    .try_deserialize::<Config>()
+                    .unwrap()
+            }
+        }
     }
 
     pub fn list_item_fg(&self) -> Color {
