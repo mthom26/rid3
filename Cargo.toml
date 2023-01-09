@@ -17,6 +17,6 @@ serde = "1.0.139"
 clap = "3.2.16"
 colorsys = "0.6.6"
 config = { version = "0.13.3", default-features = false, features = ["toml"] }
-notify = { version = "5.0.0", default-features = false, feature = ["macos_kqueue"] }
+notify = { version = "5.0.0", default-features = false, features = ["macos_kqueue"] }
 futures = "0.3.25"
 directories = "4.0.1"
