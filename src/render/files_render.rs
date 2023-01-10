@@ -62,8 +62,14 @@ where
             items.push(ListItem::new(text).style(style));
         }
 
+        let title = if let Some(s) = state.current_dir.to_str() {
+            format!("Files - {}", s)
+        } else {
+            "Files".to_string()
+        };
+
         let block = List::new(items)
-            .block(Block::default().title("Files").borders(Borders::ALL))
+            .block(Block::default().title(title).borders(Borders::ALL))
             .highlight_style(inactive_list_item(app_config));
 
         f.render_stateful_widget(block, chunks[0], &mut state.files_state);
