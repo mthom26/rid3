@@ -1,4 +1,8 @@
-use std::{fs, path::PathBuf};
+use std::{
+    cmp::{Ord, Ordering, PartialOrd},
+    fs,
+    path::PathBuf,
+};
 
 use crossterm::event::{KeyCode, KeyEvent};
 use id3::{frame::ExtendedText, Content, Frame, Tag, TagLike, Version};
@@ -48,9 +52,32 @@ impl Entry {
     }
 }
 
+#[derive(PartialEq, Eq)]
 pub enum DetailItem {
     FileName(String),
     Frame(Frame),
+}
+
+impl PartialOrd for DetailItem {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self, other) {
+            (DetailItem::FileName(_), _) => Some(Ordering::Less),
+            (DetailItem::Frame(f), DetailItem::Frame(other_f)) => {
+                Some(f.name().cmp(other_f.name()))
+            }
+            (DetailItem::Frame(_), DetailItem::FileName(_)) => Some(Ordering::Greater),
+        }
+    }
+}
+
+impl Ord for DetailItem {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (DetailItem::FileName(_), _) => Ordering::Less,
+            (DetailItem::Frame(f), DetailItem::Frame(other_f)) => f.name().cmp(other_f.name()),
+            (DetailItem::Frame(_), DetailItem::FileName(_)) => Ordering::Greater,
+        }
+    }
 }
 
 pub struct MainState {
@@ -361,8 +388,8 @@ impl MainState {
                 new_details.push(DetailItem::Frame(frame.clone()));
             }
         }
-        // TODO - Implement `Ord` for DetailItem and customise this sort
-        // new_details.sort();
+        // TODO - Customise this sort
+        new_details.sort();
         self.details = new_details;
 
         // Check old `details_state` isn't referring to an index outside `new_details` length
