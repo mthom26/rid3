@@ -73,7 +73,9 @@ impl FilesState {
                         if i == 0 {
                             self.parent_dir().expect("Could not enter parent directory");
                         } else {
-                            self.enter_dir(i).expect("Could not enter directory");
+                            if let Err(e) = self.enter_dir(i) {
+                                warn!("{}", e);
+                            }
                         }
                     }
                 }
