@@ -208,6 +208,7 @@ async fn main() -> Result<(), anyhow::Error> {
     crossterm::terminal::disable_raw_mode()?;
     terminal.backend_mut().execute(LeaveAlternateScreen)?;
 
+    // dbg!("{}", app_config);
     // let logs = LOGGER.items.lock().unwrap();
     // for i in logs.iter() {
     //     println!("{:?}", i);

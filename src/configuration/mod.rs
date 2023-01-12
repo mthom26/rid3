@@ -6,6 +6,8 @@ use log::{error, info, warn};
 use serde::Deserialize;
 use tui::style::Color;
 
+mod actions;
+use actions::ActionMap;
 mod theme;
 use theme::Theme;
 
@@ -24,11 +26,18 @@ const DEFAULT_CONFIG: &str = r#"
     log_info_fg = 'Blue'
     log_trace_fg = 'DarkGray'
     log_warn_fg = 'Yellow'
+
+    [actions]
+    up = 'Up'
+    down = 'Down'
+    quit = 'q'
+    switch_focus = 'Tab'
 "#;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
     theme: Theme,
+    actions: ActionMap,
 }
 
 impl Config {
