@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use crossterm::event::KeyCode as XTermKeyCode;
 use serde::{de::Visitor, Deserialize};
 
-#[derive(Debug, Hash, PartialEq, Eq)]
-struct KeyCode(XTermKeyCode);
+#[derive(Debug)]
+pub struct KeyCode(pub XTermKeyCode);
 
 impl<'de> Deserialize<'de> for KeyCode {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -51,14 +51,8 @@ impl<'de> Visitor<'de> for KeyCodeVisitor {
     }
 }
 
-// Currently different states use the same KeyCode for different actions. Either merge these actions
-// into one in the General Actions section (then the user would only be able to rebind all of them to
-// the same key) or have separate keys for these actions even where one key for multiple actions
-// would be convenient.
-//
-// TODO - Let one KeyCode map to multiple actions
-#[derive(Debug)]
-enum Action {
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub enum Action {
     // General Actions
     Prev,
     Next,
@@ -142,9 +136,13 @@ impl<'de> Visitor<'de> for ActionVisitor {
     }
 }
 
-#[derive(Debug)]
-pub struct ActionMap(HashMap<KeyCode, Action>);
+#[derive(Debug, Deserialize)]
+pub struct ActionMap(pub HashMap<Action, KeyCode>);
 
+// This custom deserialization is not needed as we are no longer
+// trying to convert the ActionMap to HashMap<KeyCode, Vec<Action>>
+// in here. It is done later outside of serde.
+/*
 impl<'de> Deserialize<'de> for ActionMap {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -180,3 +178,4 @@ impl<'de> Visitor<'de> for ActionMapVisitor {
         Ok(ActionMap(values))
     }
 }
+*/
