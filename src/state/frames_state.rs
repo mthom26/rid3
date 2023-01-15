@@ -1,10 +1,11 @@
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::KeyEvent;
 use tui::widgets::ListState;
 
 use crate::{
+    configuration::actions::Action,
     popups::{help::HelpPopup, Popup},
     state::{frame_data::SUPPORTED_FRAMES, update_screen_state, AppEvent, ScreenState},
-    util,
+    util, LOGGER,
 };
 
 pub struct FramesState {
@@ -24,7 +25,25 @@ impl FramesState {
         }
     }
 
-    pub fn handle_input(&mut self, key: &KeyEvent) -> AppEvent {
+    pub fn handle_input(
+        &mut self,
+        key: &KeyEvent,
+        actions: &Vec<Action>,
+        show_logs: &mut bool,
+    ) -> AppEvent {
+        let action = if actions.len() == 1 {
+            actions[0]
+        } else {
+            let mut action = Action::None;
+            for a in actions.iter() {
+                if *a == Action::AddFrame {
+                    action = *a;
+                    break;
+                }
+            }
+            action
+        };
+
         if let Some(popup) = self.popup_stack.last_mut() {
             match popup.handle_input(key) {
                 AppEvent::ClosePopup => {
@@ -35,15 +54,18 @@ impl FramesState {
                 _ => {}
             }
         } else {
-            match key.code {
-                KeyCode::Char('1') => return update_screen_state(ScreenState::Main),
-                KeyCode::Char('2') => return update_screen_state(ScreenState::Files),
-                KeyCode::Char('3') => return update_screen_state(ScreenState::Frames),
-                KeyCode::Char('q') => return AppEvent::Quit,
-                KeyCode::Char('a') => return AppEvent::AddFrame(self.frame_id()),
-                KeyCode::Char('h') => self.popup_stack.push(get_help_popup()),
-                KeyCode::Up => self.prev(),
-                KeyCode::Down => self.next(),
+            match action {
+                Action::Quit => return AppEvent::Quit,
+                Action::ScreenOne => return update_screen_state(ScreenState::Main),
+                Action::ScreenTwo => return update_screen_state(ScreenState::Files),
+                Action::ScreenThree => return update_screen_state(ScreenState::Frames),
+                Action::ToggleLogs => *show_logs = !*show_logs,
+                Action::LogsPrev => LOGGER.prev(),
+                Action::LogsNext => LOGGER.next(),
+                Action::Help => self.popup_stack.push(get_help_popup()),
+                Action::Prev => self.prev(),
+                Action::Next => self.next(),
+                Action::AddFrame => return AppEvent::AddFrame(self.frame_id()),
                 _ => {}
             }
         }

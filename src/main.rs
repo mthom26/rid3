@@ -1,7 +1,7 @@
 use std::{env, io, path::PathBuf, sync::Mutex, time::Duration};
 
 use crossterm::{
-    event::{self, Event, KeyCode},
+    event::{self, Event},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
@@ -155,25 +155,26 @@ async fn main() -> Result<(), anyhow::Error> {
         tokio::select! {
             key = input_rx.recv() => {
                 let key = key.unwrap();
-                match key.code {
-                    KeyCode::Char('l') => show_logs = !show_logs,
-                    KeyCode::PageUp => LOGGER.prev(),
-                    KeyCode::PageDown => LOGGER.next(),
-                    _ => {}
-                }
+                let actions = if let Some(actions) = app_config.get_actions(&key.code) {
+                    actions.clone()
+                } else {
+                    // warn!("Keycode {:?} not assigned to any action", key.code);
+                    vec![]
+                };
+
                 match screen_state {
-                    ScreenState::Main => match main_state.handle_input(&key) {
+                    ScreenState::Main => match main_state.handle_input(&key, &actions, &mut show_logs) {
                         AppEvent::Quit => break,
                         AppEvent::SwitchScreen(s) => screen_state = s,
                         _ => {}
                     }
-                    ScreenState::Files => match files_state.handle_input(&key){
+                    ScreenState::Files => match files_state.handle_input(&key, &actions, &mut show_logs){
                         AppEvent::Quit => break,
                         AppEvent::SwitchScreen(s) => screen_state = s,
                         AppEvent::AddFiles(files) => main_state.add_files(files),
                         _ => {}
                     }
-                    ScreenState::Frames => match frames_state.handle_input(&key) {
+                    ScreenState::Frames => match frames_state.handle_input(&key, &actions, &mut show_logs) {
                         AppEvent::Quit => break,
                         AppEvent::SwitchScreen(s) => screen_state = s,
                         AppEvent::AddFrame(frame_id) => main_state.add_frame(frame_id),

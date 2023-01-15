@@ -7,7 +7,7 @@ use log::{error, info, warn};
 use serde::Deserialize;
 use tui::style::Color;
 
-mod actions;
+pub mod actions;
 mod default_config;
 mod theme;
 use actions::{Action, ActionMap};
@@ -104,6 +104,10 @@ impl Config {
 
     pub fn log_warn_fg(&self) -> Color {
         self.theme.log_warn_fg.into()
+    }
+
+    pub fn get_actions(&self, key: &KeyCode) -> Option<&Vec<Action>> {
+        self.actions.get(key)
     }
 }
 

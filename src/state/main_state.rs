@@ -4,17 +4,18 @@ use std::{
     path::PathBuf,
 };
 
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::KeyEvent;
 use id3::{frame::ExtendedText, Content, Frame, Tag, TagLike, Version};
 use log::{info, warn};
 use tui::widgets::ListState;
 
 use crate::{
+    configuration::actions::Action,
     popups::{
         double_input::DoubleInput, help::HelpPopup, single_input::SingleInput, Popup, PopupData,
     },
     state::{update_screen_state, AppEvent, ScreenState},
-    util,
+    util, LOGGER,
 };
 
 #[derive(PartialEq, Eq)]
@@ -106,7 +107,37 @@ impl MainState {
         }
     }
 
-    pub fn handle_input(&mut self, key: &KeyEvent) -> AppEvent {
+    pub fn handle_input(
+        &mut self,
+        key: &KeyEvent,
+        actions: &Vec<Action>,
+        show_logs: &mut bool,
+    ) -> AppEvent {
+        // If the length of actions is greater than one then the KeyCode
+        // pressed has been mapped to multiple actions. As long as the actions
+        // have been configured properly there should only be one relevant
+        // action in here so iter through actions and find it. The same applies
+        // to the other screen states. This looks clumsy but works well enough
+        // for now.
+        let action = if actions.len() == 1 {
+            actions[0]
+        } else {
+            let mut action = Action::None;
+            for a in actions.iter() {
+                if *a == Action::RemoveFiles
+                    || *a == Action::WriteTags
+                    || *a == Action::SelectCurrent
+                    || *a == Action::SelectAll
+                    || *a == Action::Remove
+                    || *a == Action::SpawnPopup
+                {
+                    action = *a;
+                    break;
+                }
+            }
+            action
+        };
+
         if let Some(popup) = self.popup_stack.last_mut() {
             match popup.handle_input(key) {
                 AppEvent::ClosePopup => {
@@ -187,30 +218,33 @@ impl MainState {
                 _ => {}
             }
         } else {
-            match key.code {
-                KeyCode::Char('1') => return update_screen_state(ScreenState::Main),
-                KeyCode::Char('2') => return update_screen_state(ScreenState::Files),
-                KeyCode::Char('3') => return update_screen_state(ScreenState::Frames),
-                KeyCode::Char('c') => self.remove_all_files(),
-                KeyCode::Char('q') => return AppEvent::Quit,
-                KeyCode::Char('w') => self.write_tags().expect("Could not write tags"),
-                KeyCode::Char('s') => match self.focus {
+            match action {
+                Action::Quit => return AppEvent::Quit,
+                Action::ScreenOne => return update_screen_state(ScreenState::Main),
+                Action::ScreenTwo => return update_screen_state(ScreenState::Files),
+                Action::ScreenThree => return update_screen_state(ScreenState::Frames),
+                Action::ToggleLogs => *show_logs = !*show_logs,
+                Action::LogsPrev => LOGGER.prev(),
+                Action::LogsNext => LOGGER.next(),
+                Action::Help => self.popup_stack.push(get_help_popup()),
+                Action::Prev => self.prev(),
+                Action::Next => self.next(),
+                Action::SwitchFocus => self.switch_focus(),
+                Action::RemoveFiles => self.remove_all_files(),
+                Action::WriteTags => self.write_tags().expect("Could not write tags"),
+                Action::SelectCurrent => match self.focus {
                     Focus::Files => self.select_entry(),
                     _ => {}
                 },
-                KeyCode::Char('a') => match self.focus {
+                Action::SelectAll => match self.focus {
                     Focus::Files => self.select_all_entries(),
                     _ => {}
                 },
-                KeyCode::Char('d') => match self.focus {
+                Action::Remove => match self.focus {
                     Focus::Files => self.remove_files(),
                     Focus::Details => self.remove_frames(),
                 },
-                KeyCode::Char('h') => self.popup_stack.push(get_help_popup()),
-                KeyCode::Up => self.prev(),
-                KeyCode::Down => self.next(),
-                KeyCode::Tab => self.switch_focus(),
-                KeyCode::Enter => self.spawn_popup(),
+                Action::SpawnPopup => self.spawn_popup(),
                 _ => {}
             }
         }

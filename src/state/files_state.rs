@@ -4,15 +4,16 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::KeyEvent;
 use id3::Tag;
 use log::{error, warn};
 use tui::widgets::ListState;
 
 use crate::{
+    configuration::actions::Action,
     popups::{help::HelpPopup, Popup},
     state::{main_state::Entry, update_screen_state, AppEvent, ScreenState},
-    util,
+    util, LOGGER,
 };
 
 pub enum FilesStateItem {
@@ -46,7 +47,29 @@ impl FilesState {
         })
     }
 
-    pub fn handle_input(&mut self, key: &KeyEvent) -> AppEvent {
+    pub fn handle_input(
+        &mut self,
+        key: &KeyEvent,
+        actions: &Vec<Action>,
+        show_logs: &mut bool,
+    ) -> AppEvent {
+        let action = if actions.len() == 1 {
+            actions[0]
+        } else {
+            let mut action = Action::None;
+            for a in actions.iter() {
+                if *a == Action::AddAllFiles
+                    || *a == Action::AddFile
+                    || *a == Action::ParentDir
+                    || *a == Action::EnterDir
+                {
+                    action = *a;
+                    break;
+                }
+            }
+            action
+        };
+
         if let Some(popup) = self.popup_stack.last_mut() {
             match popup.handle_input(key) {
                 AppEvent::ClosePopup => {
@@ -57,18 +80,21 @@ impl FilesState {
                 _ => {}
             }
         } else {
-            match key.code {
-                KeyCode::Char('1') => return update_screen_state(ScreenState::Main),
-                KeyCode::Char('2') => return update_screen_state(ScreenState::Files),
-                KeyCode::Char('3') => return update_screen_state(ScreenState::Frames),
-                KeyCode::Char('q') => return AppEvent::Quit,
-                KeyCode::Char('a') => return self.add_all_files().expect("Could not add files"),
-                KeyCode::Char('s') => return self.add_file().expect("Could not add file"),
-                KeyCode::Char('b') => self.parent_dir().expect("Could not enter parent directory"),
-                KeyCode::Char('h') => self.popup_stack.push(get_help_popup()),
-                KeyCode::Up => self.prev(),
-                KeyCode::Down => self.next(),
-                KeyCode::Enter => {
+            match action {
+                Action::Quit => return AppEvent::Quit,
+                Action::ScreenOne => return update_screen_state(ScreenState::Main),
+                Action::ScreenTwo => return update_screen_state(ScreenState::Files),
+                Action::ScreenThree => return update_screen_state(ScreenState::Frames),
+                Action::ToggleLogs => *show_logs = !*show_logs,
+                Action::LogsPrev => LOGGER.prev(),
+                Action::LogsNext => LOGGER.next(),
+                Action::Help => self.popup_stack.push(get_help_popup()),
+                Action::Prev => self.prev(),
+                Action::Next => self.next(),
+                Action::AddAllFiles => return self.add_all_files().expect("Could not add files"),
+                Action::AddFile => return self.add_file().expect("Could not add file"),
+                Action::ParentDir => self.parent_dir().expect("Could not enter parent directory"),
+                Action::EnterDir => {
                     if let Some(i) = self.files_state.selected() {
                         if i == 0 {
                             self.parent_dir().expect("Could not enter parent directory");

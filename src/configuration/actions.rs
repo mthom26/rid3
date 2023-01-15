@@ -51,6 +51,12 @@ impl<'de> Visitor<'de> for KeyCodeVisitor {
     }
 }
 
+// TODO - Currently multiple actions can be assigned to one KeyCode. The user
+//        can assign the same KeyCode for an action in the `General Actions`
+//        section and one of the other `State Actions` sections which would
+//        introduce the potential for returning two or more relevant actions
+//        from one key press causing unpredictable behaviour in the app.
+//        Need to check for these conflicts when building the config.
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Action {
     // General Actions
@@ -60,6 +66,8 @@ pub enum Action {
     Back, // Exit current context (popup, input, etc...) without saving
     SwitchFocus,
     ToggleLogs,
+    LogsPrev,
+    LogsNext,
     ScreenOne,
     ScreenTwo,
     ScreenThree,
@@ -81,6 +89,10 @@ pub enum Action {
 
     // FramesState Actions
     AddFrame,
+
+    // A variant for no action here is easier than using an
+    // Option<Action> elsewhere in the app
+    None,
 }
 
 impl<'de> Deserialize<'de> for Action {
@@ -113,6 +125,8 @@ impl<'de> Visitor<'de> for ActionVisitor {
             "back" => Ok(Action::Back),
             "switch_focus" => Ok(Action::SwitchFocus),
             "toggle_logs" => Ok(Action::ToggleLogs),
+            "logs_prev" => Ok(Action::LogsPrev),
+            "logs_next" => Ok(Action::LogsNext),
             "screen_one" => Ok(Action::ScreenOne),
             "screen_two" => Ok(Action::ScreenTwo),
             "screen_three" => Ok(Action::ScreenThree),
