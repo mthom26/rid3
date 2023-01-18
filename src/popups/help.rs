@@ -1,7 +1,11 @@
+use crossterm::event::KeyEvent;
 use tui::widgets::{Block, Borders, List, ListItem};
 
-use crate::popups::{Popup, PopupRender};
-use crate::state::AppEvent;
+use crate::{
+    configuration::actions::Action,
+    popups::{Popup, PopupRender},
+    state::AppEvent,
+};
 
 pub struct HelpPopup {
     title: String,
@@ -15,7 +19,7 @@ impl HelpPopup {
 }
 
 impl Popup for HelpPopup {
-    fn handle_input(&mut self, _key: &crossterm::event::KeyEvent) -> crate::state::AppEvent {
+    fn handle_input(&mut self, _key: &KeyEvent, _action: Action) -> AppEvent {
         // Just close the help popup on any input
         AppEvent::ClosePopup
     }

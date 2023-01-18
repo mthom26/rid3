@@ -71,7 +71,7 @@ impl FilesState {
         };
 
         if let Some(popup) = self.popup_stack.last_mut() {
-            match popup.handle_input(key) {
+            match popup.handle_input(key, action) {
                 AppEvent::ClosePopup => {
                     // Need to return relevant data from popup here, probably another enum...
                     let _p = self.popup_stack.pop().unwrap();

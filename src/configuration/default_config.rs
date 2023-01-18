@@ -45,4 +45,8 @@ pub const DEFAULT_CONFIG: &str = r#"
 
     # Frames Screen Actions
     add_frame = 'a'
+
+    # Popup Actions
+    select_field = 'Enter'
+    save_changes = 'w'
 "#;

@@ -1,12 +1,15 @@
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, KeyEvent};
 use tui::{
     style::{Color, Style},
     text::Span,
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
 };
 
-use crate::popups::{Popup, PopupData, PopupRender};
-use crate::state::AppEvent;
+use crate::{
+    configuration::actions::Action,
+    popups::{Popup, PopupData, PopupRender},
+    state::AppEvent,
+};
 
 pub struct DoubleInput {
     description: String,
@@ -78,13 +81,13 @@ impl DoubleInput {
 }
 
 impl Popup for DoubleInput {
-    fn handle_input(&mut self, key: &crossterm::event::KeyEvent) -> AppEvent {
+    fn handle_input(&mut self, key: &KeyEvent, action: Action) -> AppEvent {
         if !self.input_focused {
-            match key.code {
-                KeyCode::Esc => return AppEvent::ClosePopup,
-                KeyCode::Up => self.prev(),
-                KeyCode::Down => self.next(),
-                KeyCode::Enter => {
+            match action {
+                Action::Back => return AppEvent::ClosePopup,
+                Action::Prev => self.prev(),
+                Action::Next => self.next(),
+                Action::SelectField => {
                     if let Some(i) = self.list_state.selected() {
                         if i == 0 {
                             self.input = self.description.clone();
@@ -95,7 +98,7 @@ impl Popup for DoubleInput {
                         self.toggle_focus();
                     }
                 }
-                KeyCode::Char('w') => {
+                Action::SaveChanges => {
                     return AppEvent::ClosePopupData(PopupData::DoubleInput(
                         self.description.clone(),
                         self.value.clone(),

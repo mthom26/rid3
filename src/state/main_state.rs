@@ -123,23 +123,33 @@ impl MainState {
             actions[0]
         } else {
             let mut action = Action::None;
-            for a in actions.iter() {
-                if *a == Action::RemoveFiles
-                    || *a == Action::WriteTags
-                    || *a == Action::SelectCurrent
-                    || *a == Action::SelectAll
-                    || *a == Action::Remove
-                    || *a == Action::SpawnPopup
-                {
-                    action = *a;
-                    break;
+            // Need to check for different actions if a popup is active
+            if self.popup_stack.is_empty() {
+                for a in actions.iter() {
+                    if *a == Action::RemoveFiles
+                        || *a == Action::WriteTags
+                        || *a == Action::SelectCurrent
+                        || *a == Action::SelectAll
+                        || *a == Action::Remove
+                        || *a == Action::SpawnPopup
+                    {
+                        action = *a;
+                        break;
+                    }
+                }
+            } else {
+                for a in actions.iter() {
+                    if *a == Action::SelectField || *a == Action::SaveChanges {
+                        action = *a;
+                        break;
+                    }
                 }
             }
             action
         };
 
         if let Some(popup) = self.popup_stack.last_mut() {
-            match popup.handle_input(key) {
+            match popup.handle_input(key, action) {
                 AppEvent::ClosePopup => {
                     let _ = self.popup_stack.pop().unwrap();
                 }

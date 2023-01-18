@@ -1,12 +1,15 @@
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, KeyEvent};
 use tui::{
     style::{Color, Style},
     text::Span,
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
 };
 
-use crate::popups::{Popup, PopupData, PopupRender};
-use crate::state::AppEvent;
+use crate::{
+    configuration::actions::Action,
+    popups::{Popup, PopupData, PopupRender},
+    state::AppEvent,
+};
 
 pub struct SingleInput {
     text: String,
@@ -49,7 +52,7 @@ impl SingleInput {
 }
 
 impl Popup for SingleInput {
-    fn handle_input(&mut self, key: &crossterm::event::KeyEvent) -> AppEvent {
+    fn handle_input(&mut self, key: &KeyEvent, _action: Action) -> AppEvent {
         match key.code {
             KeyCode::Esc => return AppEvent::ClosePopup,
             KeyCode::Backspace => {

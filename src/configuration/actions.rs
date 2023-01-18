@@ -90,6 +90,10 @@ pub enum Action {
     // FramesState Actions
     AddFrame,
 
+    // Popup Actions
+    SelectField, // Select the highlighted frame field
+    SaveChanges, // Save changes to the frame
+
     // A variant for no action here is easier than using an
     // Option<Action> elsewhere in the app
     None,
@@ -145,6 +149,9 @@ impl<'de> Visitor<'de> for ActionVisitor {
             "enter_directory" => Ok(Action::EnterDir),
             // FramesState Actions
             "add_frame" => Ok(Action::AddFrame),
+            // Popup Actions
+            "select_field" => Ok(Action::SelectField),
+            "save_changes" => Ok(Action::SaveChanges),
             a => Err(serde::de::Error::custom(format!("Invalid action `{}`", a))),
         }
     }
