@@ -2,7 +2,7 @@ use crossterm::event::KeyEvent;
 use tui::widgets::ListState;
 
 use crate::{
-    configuration::actions::Action,
+    configuration::{actions::Action, Config},
     popups::{help::HelpPopup, Popup},
     state::{frame_data::SUPPORTED_FRAMES, update_screen_state, AppEvent, ScreenState},
     util, LOGGER,
@@ -12,6 +12,8 @@ pub struct FramesState {
     pub popup_stack: Vec<Box<dyn Popup>>,
 
     pub frames_state: ListState,
+
+    help_text: Vec<String>,
 }
 
 impl FramesState {
@@ -22,6 +24,7 @@ impl FramesState {
         Self {
             popup_stack: vec![],
             frames_state,
+            help_text: vec![],
         }
     }
 
@@ -62,7 +65,7 @@ impl FramesState {
                 Action::ToggleLogs => *show_logs = !*show_logs,
                 Action::LogsPrev => LOGGER.prev(),
                 Action::LogsNext => LOGGER.next(),
-                Action::Help => self.popup_stack.push(get_help_popup()),
+                Action::Help => self.spawn_help_popup(),
                 Action::Prev => self.prev(),
                 Action::Next => self.next(),
                 Action::AddFrame => return AppEvent::AddFrame(self.frame_id()),
@@ -98,14 +101,21 @@ impl FramesState {
     pub fn popup_widget(&self) -> Option<&Box<dyn Popup>> {
         self.popup_stack.last()
     }
-}
 
-fn get_help_popup() -> Box<HelpPopup> {
-    Box::new(HelpPopup::new(
-        "Main Help".to_owned(),
-        vec![
-            "`q` - Quit".to_owned(),
-            "`a` - Add selected frame".to_owned(),
-        ],
-    ))
+    pub fn spawn_help_popup(&mut self) {
+        self.popup_stack.push(Box::new(HelpPopup::new(
+            "Frames Help".to_owned(),
+            self.help_text.clone(),
+        )));
+    }
+
+    pub fn update_help_text(&mut self, config: &Config) {
+        let quit = config.get_key(&Action::Quit).unwrap();
+        let add = config.get_key(&Action::AddFrame).unwrap();
+
+        self.help_text = vec![
+            format!("`{:?}` - Quit", quit),
+            format!("`{:?}` - Add selected frame", add),
+        ];
+    }
 }

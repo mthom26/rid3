@@ -28,6 +28,7 @@ pub struct IConfig {
 pub struct Config {
     theme: Theme,
     actions: HashMap<KeyCode, Vec<Action>>,
+    keys: HashMap<Action, KeyCode>,
 }
 
 impl Config {
@@ -109,6 +110,10 @@ impl Config {
     pub fn get_actions(&self, key: &KeyCode) -> Option<&Vec<Action>> {
         self.actions.get(key)
     }
+
+    pub fn get_key(&self, action: &Action) -> Option<&KeyCode> {
+        self.keys.get(action)
+    }
 }
 
 pub fn get_config_file_string() -> Option<String> {
@@ -139,6 +144,7 @@ pub fn get_config_dir() -> Option<PathBuf> {
 // HashMap<KeyCode, Vec<Action>> of the final Config struct.
 fn get_config(i_conf: IConfig) -> Config {
     let theme = i_conf.theme;
+    let mut keys = HashMap::new();
 
     let mut actions: HashMap<KeyCode, Vec<Action>> = HashMap::new();
 
@@ -150,7 +156,12 @@ fn get_config(i_conf: IConfig) -> Config {
 
         v.push(*action);
         actions.insert(keycode.0, v);
+        keys.insert(*action, keycode.0);
     }
 
-    Config { theme, actions }
+    Config {
+        theme,
+        actions,
+        keys,
+    }
 }

@@ -10,7 +10,7 @@ use log::{info, warn};
 use tui::widgets::ListState;
 
 use crate::{
-    configuration::actions::Action,
+    configuration::{actions::Action, Config},
     popups::{
         double_input::DoubleInput, help::HelpPopup, single_input::SingleInput, Popup, PopupData,
     },
@@ -91,6 +91,8 @@ pub struct MainState {
 
     pub details_state: ListState,
     pub details: Vec<DetailItem>,
+
+    help_text: Vec<String>,
 }
 
 impl MainState {
@@ -104,6 +106,7 @@ impl MainState {
             files: vec![],
             details_state: ListState::default(),
             details: vec![],
+            help_text: vec![],
         }
     }
 
@@ -236,7 +239,7 @@ impl MainState {
                 Action::ToggleLogs => *show_logs = !*show_logs,
                 Action::LogsPrev => LOGGER.prev(),
                 Action::LogsNext => LOGGER.next(),
-                Action::Help => self.popup_stack.push(get_help_popup()),
+                Action::Help => self.spawn_help_popup(),
                 Action::Prev => self.prev(),
                 Action::Next => self.next(),
                 Action::SwitchFocus => self.switch_focus(),
@@ -575,19 +578,30 @@ impl MainState {
     pub fn popup_widget(&self) -> Option<&Box<dyn Popup>> {
         self.popup_stack.last()
     }
-}
 
-fn get_help_popup() -> Box<HelpPopup> {
-    Box::new(HelpPopup::new(
-        "Main Help".to_owned(),
-        vec![
-            "`q` - Quit".to_owned(),
-            "`c` - Remove all files".to_owned(),
-            "`d` - Remove selected files/frame".to_owned(),
-            "`s` - Select highlighted file".to_owned(),
-            "`a` - Select/Deselect all files".to_owned(),
-            "`u` - Update file names".to_owned(),
-            "`w` - Write changes".to_owned(),
-        ],
-    ))
+    pub fn spawn_help_popup(&mut self) {
+        self.popup_stack.push(Box::new(HelpPopup::new(
+            "Main Help".to_owned(),
+            self.help_text.clone(),
+        )));
+    }
+
+    pub fn update_help_text(&mut self, config: &Config) {
+        let quit = config.get_key(&Action::Quit).unwrap();
+        let remove_all = config.get_key(&Action::RemoveFiles).unwrap();
+        let remove = config.get_key(&Action::Remove).unwrap();
+        let select_all = config.get_key(&Action::SelectAll).unwrap();
+        let select = config.get_key(&Action::SelectCurrent).unwrap();
+        // TODO - let update = config.get_key().unwrap();
+        let write = config.get_key(&Action::WriteTags).unwrap();
+
+        self.help_text = vec![
+            format!("`{:?}` - Quit", quit),
+            format!("`{:?}` - Remove all files", remove_all),
+            format!("`{:?}` - Remove selected files/frame", remove),
+            format!("`{:?}` - Select highlighted file", select),
+            format!("`{:?}` - Select/Deselect all files", select_all),
+            format!("`{:?}` - Write changes", write),
+        ];
+    }
 }

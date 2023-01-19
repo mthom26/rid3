@@ -18,7 +18,6 @@ pub enum PopupData {
     DoubleInput(String, String),
 }
 
-// TODO - Use Actions in Popups
 pub trait Popup {
     fn handle_input(&mut self, key: &KeyEvent, action: Action) -> AppEvent;
     fn get_widget(&self) -> PopupRender; // TODO - Add `config` here for styling

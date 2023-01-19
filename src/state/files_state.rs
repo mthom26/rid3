@@ -10,7 +10,7 @@ use log::{error, warn};
 use tui::widgets::ListState;
 
 use crate::{
-    configuration::actions::Action,
+    configuration::{actions::Action, Config},
     popups::{help::HelpPopup, Popup},
     state::{main_state::Entry, update_screen_state, AppEvent, ScreenState},
     util, LOGGER,
@@ -29,6 +29,8 @@ pub struct FilesState {
     pub files: Vec<FilesStateItem>,
 
     pub show_hidden_dirs: bool,
+
+    help_text: Vec<String>,
 }
 
 impl FilesState {
@@ -44,6 +46,7 @@ impl FilesState {
             files,
             files_state: ListState::default(),
             show_hidden_dirs: false,
+            help_text: vec![],
         })
     }
 
@@ -88,7 +91,7 @@ impl FilesState {
                 Action::ToggleLogs => *show_logs = !*show_logs,
                 Action::LogsPrev => LOGGER.prev(),
                 Action::LogsNext => LOGGER.next(),
-                Action::Help => self.popup_stack.push(get_help_popup()),
+                Action::Help => self.spawn_help_popup(),
                 Action::Prev => self.prev(),
                 Action::Next => self.next(),
                 Action::AddAllFiles => return self.add_all_files().expect("Could not add files"),
@@ -186,6 +189,27 @@ impl FilesState {
     pub fn popup_widget(&self) -> Option<&Box<dyn Popup>> {
         self.popup_stack.last()
     }
+
+    pub fn spawn_help_popup(&mut self) {
+        self.popup_stack.push(Box::new(HelpPopup::new(
+            "Files Help".to_owned(),
+            self.help_text.clone(),
+        )));
+    }
+
+    pub fn update_help_text(&mut self, config: &Config) {
+        let quit = config.get_key(&Action::Quit).unwrap();
+        let parent_dir = config.get_key(&Action::ParentDir).unwrap();
+        let add = config.get_key(&Action::AddFile).unwrap();
+        let add_all = config.get_key(&Action::AddAllFiles).unwrap();
+
+        self.help_text = vec![
+            format!("`{:?}` - Quit", quit),
+            format!("`{:?}` - Change to parent directory", parent_dir),
+            format!("`{:?}` - Add highlighted file", add),
+            format!("`{:?}` - Add all files", add_all),
+        ];
+    }
 }
 
 // Get a Vec of (Path, Tags) from a Vec of DirEntrys
@@ -272,16 +296,4 @@ pub fn sort_files(files: &mut Vec<FilesStateItem>) {
             _ => unreachable!(),
         }
     });
-}
-
-fn get_help_popup() -> Box<HelpPopup> {
-    Box::new(HelpPopup::new(
-        "Main Help".to_owned(),
-        vec![
-            "`q` - Quit".to_owned(),
-            "`b` - Change to parent directory".to_owned(),
-            "`s` - Add highlighted file".to_owned(),
-            "`a` - Add all files".to_owned(),
-        ],
-    ))
 }

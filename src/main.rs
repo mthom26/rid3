@@ -58,6 +58,9 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut main_state = MainState::new();
     let mut files_state = FilesState::new(dir)?;
     let mut frames_state = FramesState::new();
+    main_state.update_help_text(&app_config);
+    files_state.update_help_text(&app_config);
+    frames_state.update_help_text(&app_config);
     let mut show_logs = true;
 
     let (input_tx, mut input_rx) = mpsc::channel(32);
@@ -195,6 +198,9 @@ async fn main() -> Result<(), anyhow::Error> {
                 match event_kind {
                     EventKind::Modify(ModifyKind::Data(_)) => {
                         app_config = Config::new();
+                        main_state.update_help_text(&app_config);
+                        files_state.update_help_text(&app_config);
+                        frames_state.update_help_text(&app_config);
                     },
                     _ => {}
                 }

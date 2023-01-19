@@ -1,24 +1,24 @@
 use std::collections::HashMap;
 
-use crossterm::event::KeyCode as XTermKeyCode;
+use crossterm::event::KeyCode;
 use serde::{de::Visitor, Deserialize};
 
 #[derive(Debug)]
-pub struct KeyCode(pub XTermKeyCode);
+pub struct AppKeyCode(pub KeyCode);
 
-impl<'de> Deserialize<'de> for KeyCode {
+impl<'de> Deserialize<'de> for AppKeyCode {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        deserializer.deserialize_str(KeyCodeVisitor)
+        deserializer.deserialize_str(AppKeyCodeVisitor)
     }
 }
 
-struct KeyCodeVisitor;
+struct AppKeyCodeVisitor;
 
-impl<'de> Visitor<'de> for KeyCodeVisitor {
-    type Value = KeyCode;
+impl<'de> Visitor<'de> for AppKeyCodeVisitor {
+    type Value = AppKeyCode;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
         formatter.write_str("KeyCodeVisitor Error")
@@ -29,22 +29,22 @@ impl<'de> Visitor<'de> for KeyCodeVisitor {
         E: serde::de::Error,
     {
         match v {
-            "Up" => Ok(KeyCode(XTermKeyCode::Up)),
-            "Down" => Ok(KeyCode(XTermKeyCode::Down)),
-            "Left" => Ok(KeyCode(XTermKeyCode::Left)),
-            "Right" => Ok(KeyCode(XTermKeyCode::Right)),
-            "Esc" => Ok(KeyCode(XTermKeyCode::Esc)),
-            "Tab" => Ok(KeyCode(XTermKeyCode::Tab)),
-            "Backspace" => Ok(KeyCode(XTermKeyCode::Backspace)),
-            "Enter" => Ok(KeyCode(XTermKeyCode::Enter)),
-            "Home" => Ok(KeyCode(XTermKeyCode::Home)),
-            "End" => Ok(KeyCode(XTermKeyCode::End)),
-            "PageUp" => Ok(KeyCode(XTermKeyCode::PageUp)),
-            "PageDown" => Ok(KeyCode(XTermKeyCode::PageDown)),
-            "BackTab" => Ok(KeyCode(XTermKeyCode::BackTab)),
-            "Delete" => Ok(KeyCode(XTermKeyCode::Delete)),
-            "Insert" => Ok(KeyCode(XTermKeyCode::Insert)),
-            c if c.len() == 1 => Ok(KeyCode(XTermKeyCode::Char(c.chars().next().unwrap()))),
+            "Up" => Ok(AppKeyCode(KeyCode::Up)),
+            "Down" => Ok(AppKeyCode(KeyCode::Down)),
+            "Left" => Ok(AppKeyCode(KeyCode::Left)),
+            "Right" => Ok(AppKeyCode(KeyCode::Right)),
+            "Esc" => Ok(AppKeyCode(KeyCode::Esc)),
+            "Tab" => Ok(AppKeyCode(KeyCode::Tab)),
+            "Backspace" => Ok(AppKeyCode(KeyCode::Backspace)),
+            "Enter" => Ok(AppKeyCode(KeyCode::Enter)),
+            "Home" => Ok(AppKeyCode(KeyCode::Home)),
+            "End" => Ok(AppKeyCode(KeyCode::End)),
+            "PageUp" => Ok(AppKeyCode(KeyCode::PageUp)),
+            "PageDown" => Ok(AppKeyCode(KeyCode::PageDown)),
+            "BackTab" => Ok(AppKeyCode(KeyCode::BackTab)),
+            "Delete" => Ok(AppKeyCode(KeyCode::Delete)),
+            "Insert" => Ok(AppKeyCode(KeyCode::Insert)),
+            c if c.len() == 1 => Ok(AppKeyCode(KeyCode::Char(c.chars().next().unwrap()))),
             // TODO - Handle F1-F12 keys
             k => Err(serde::de::Error::custom(format!("Invalid KeyCode `{}`", k))),
         }
@@ -158,7 +158,7 @@ impl<'de> Visitor<'de> for ActionVisitor {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ActionMap(pub HashMap<Action, KeyCode>);
+pub struct ActionMap(pub HashMap<Action, AppKeyCode>);
 
 // This custom deserialization is not needed as we are no longer
 // trying to convert the ActionMap to HashMap<KeyCode, Vec<Action>>
