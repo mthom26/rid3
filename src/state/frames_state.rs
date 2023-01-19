@@ -114,8 +114,8 @@ impl FramesState {
         let add = config.get_key(&Action::AddFrame).unwrap();
 
         self.help_text = vec![
-            format!("`{:?}` - Quit", quit),
-            format!("`{:?}` - Add selected frame", add),
+            format!("`{}` - Quit", util::display_keycode(quit)),
+            format!("`{}` - Add selected frame", util::display_keycode(add)),
         ];
     }
 }

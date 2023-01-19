@@ -204,10 +204,13 @@ impl FilesState {
         let add_all = config.get_key(&Action::AddAllFiles).unwrap();
 
         self.help_text = vec![
-            format!("`{:?}` - Quit", quit),
-            format!("`{:?}` - Change to parent directory", parent_dir),
-            format!("`{:?}` - Add highlighted file", add),
-            format!("`{:?}` - Add all files", add_all),
+            format!("`{}` - Quit", util::display_keycode(quit)),
+            format!(
+                "`{}` - Change to parent directory",
+                util::display_keycode(parent_dir)
+            ),
+            format!("`{}` - Add highlighted file", util::display_keycode(add)),
+            format!("`{}` - Add all files", util::display_keycode(add_all)),
         ];
     }
 }

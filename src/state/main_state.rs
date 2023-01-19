@@ -596,12 +596,21 @@ impl MainState {
         let write = config.get_key(&Action::WriteTags).unwrap();
 
         self.help_text = vec![
-            format!("`{:?}` - Quit", quit),
-            format!("`{:?}` - Remove all files", remove_all),
-            format!("`{:?}` - Remove selected files/frame", remove),
-            format!("`{:?}` - Select highlighted file", select),
-            format!("`{:?}` - Select/Deselect all files", select_all),
-            format!("`{:?}` - Write changes", write),
+            format!("`{}` - Quit", util::display_keycode(quit)),
+            format!("`{}` - Remove all files", util::display_keycode(remove_all)),
+            format!(
+                "`{}` - Remove selected files/frame",
+                util::display_keycode(remove)
+            ),
+            format!(
+                "`{}` - Select highlighted file",
+                util::display_keycode(select)
+            ),
+            format!(
+                "`{}` - Select/Deselect all files",
+                util::display_keycode(select_all)
+            ),
+            format!("`{}` - Write changes", util::display_keycode(write)),
         ];
     }
 }
