@@ -80,7 +80,8 @@ pub enum Action {
     SelectAll,     // Select all highlighted items
     Remove,        // Remove currently selected files/frames
     SpawnPopup,
-    UpdateNames, // Update filenames according to template string
+    UpdateNames,   // Update filenames according to template string
+    TemplatePopup, // Spawn template popup
 
     // FilesState Actions
     AddAllFiles, // Add all files
@@ -144,6 +145,7 @@ impl<'de> Visitor<'de> for ActionVisitor {
             "remove" => Ok(Action::Remove),
             "spawn_popup" => Ok(Action::SpawnPopup),
             "update_names" => Ok(Action::UpdateNames),
+            "template_popup" => Ok(Action::TemplatePopup),
             // FilesState Actions
             "add_file" => Ok(Action::AddFile),
             "add_all_files" => Ok(Action::AddAllFiles),

@@ -6,16 +6,19 @@ use crate::{configuration::actions::Action, state::AppEvent};
 pub mod double_input;
 pub mod help;
 pub mod single_input;
+pub mod template;
 
 pub enum PopupRender<'a> {
     Help(List<'a>),
     SingleInput((List<'a>, Paragraph<'a>, ListState, usize)),
     DoubleInput((List<'a>, Paragraph<'a>, ListState, usize)),
+    TemplateInput((List<'a>, Paragraph<'a>, usize)),
 }
 
 pub enum PopupData {
     SingleInput(String),
     DoubleInput(String, String),
+    TemplateInput(String),
 }
 
 pub trait Popup {

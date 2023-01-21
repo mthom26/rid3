@@ -13,7 +13,8 @@ use tui::widgets::ListState;
 use crate::{
     configuration::{actions::Action, Config},
     popups::{
-        double_input::DoubleInput, help::HelpPopup, single_input::SingleInput, Popup, PopupData,
+        double_input::DoubleInput, help::HelpPopup, single_input::SingleInput,
+        template::TemplateInput, Popup, PopupData,
     },
     state::{frame_data, update_screen_state, AppEvent, ScreenState},
     util, LOGGER,
@@ -231,6 +232,14 @@ impl MainState {
                             }
                             self.update_files(new_frame);
                         }
+                        PopupData::TemplateInput(text) => {
+                            if text.is_empty() {
+                                warn!("Template field cannot be empty");
+                                return AppEvent::None;
+                            }
+                            info!("Updating template string to '{}'", text);
+                            self.template_string = text;
+                        }
                     }
                 }
                 AppEvent::SwitchScreen(s) => return update_screen_state(s),
@@ -265,6 +274,7 @@ impl MainState {
                 },
                 Action::SpawnPopup => self.spawn_popup(),
                 Action::UpdateNames => self.update_filenames(),
+                Action::TemplatePopup => self.spawn_template_popup(),
                 _ => {}
             }
         }
@@ -562,6 +572,11 @@ impl MainState {
                 },
             }
         }
+    }
+
+    fn spawn_template_popup(&mut self) {
+        let popup = TemplateInput::new(&self.template_string);
+        self.popup_stack.push(Box::new(popup));
     }
 
     // Write updated tags to files

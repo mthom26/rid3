@@ -37,6 +37,7 @@ pub const DEFAULT_CONFIG: &str = r#"
     remove = 'd'
     spawn_popup = 'Enter'
     update_names = 'u'
+    template_popup = 't'
 
     # Files Screen Actions
     add_file = 's'
