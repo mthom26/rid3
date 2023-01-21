@@ -6,7 +6,8 @@ use std::{
 
 use crossterm::event::KeyEvent;
 use id3::{frame::ExtendedText, Content, Frame, Tag, TagLike, Version};
-use log::{info, warn};
+use log::{error, info, warn};
+use regex::{Match, Regex};
 use tui::widgets::ListState;
 
 use crate::{
@@ -14,7 +15,7 @@ use crate::{
     popups::{
         double_input::DoubleInput, help::HelpPopup, single_input::SingleInput, Popup, PopupData,
     },
-    state::{update_screen_state, AppEvent, ScreenState},
+    state::{frame_data, update_screen_state, AppEvent, ScreenState},
     util, LOGGER,
 };
 
@@ -93,11 +94,14 @@ pub struct MainState {
     pub details: Vec<DetailItem>,
 
     help_text: Vec<String>,
+    template_string: String,
+    rex: Regex,
 }
 
 impl MainState {
     pub fn new() -> Self {
         let popup_stack: Vec<Box<dyn Popup>> = vec![];
+        let rex = Regex::new(r"\{[\w]+\}").unwrap();
 
         Self {
             popup_stack,
@@ -107,6 +111,8 @@ impl MainState {
             details_state: ListState::default(),
             details: vec![],
             help_text: vec![],
+            template_string: "{track} {title}.mp3".to_string(),
+            rex,
         }
     }
 
@@ -258,6 +264,7 @@ impl MainState {
                     Focus::Details => self.remove_frames(),
                 },
                 Action::SpawnPopup => self.spawn_popup(),
+                Action::UpdateNames => self.update_filenames(),
                 _ => {}
             }
         }
@@ -573,6 +580,49 @@ impl MainState {
 
         info!("New tags written");
         Ok(())
+    }
+
+    fn update_filenames(&mut self) {
+        let mats: Vec<Match> = self.rex.find_iter(&self.template_string).collect();
+
+        let mut frame_ids = vec![];
+        for mat in &mats {
+            let text: Vec<&str> = mat.as_str().split(&['{', '}']).collect();
+
+            if let Ok(id) = frame_data::name_to_id(text[1]) {
+                frame_ids.push(id);
+            } else {
+                warn!("Unknown frame id in template string: '{}'", text[1]);
+            }
+        }
+
+        'entries: for entry in self.files.iter_mut() {
+            if entry.selected {
+                let mut contents = vec![];
+                for id in &frame_ids {
+                    if let Some(frame) = entry.tag.get(id) {
+                        match frame.content() {
+                            Content::Text(text) => contents.push(text),
+                            _ => {
+                                error!("Content type not supported");
+                                continue 'entries;
+                            }
+                        }
+                    } else {
+                        error!("{} does not contain {} frame", entry.filename, id);
+                        continue 'entries;
+                    }
+                }
+
+                let mut new_name = self.template_string.clone();
+                for (i, mat) in mats.iter().enumerate() {
+                    new_name = new_name.replace(mat.as_str(), contents[i]);
+                }
+                entry.filename = new_name;
+            }
+        }
+
+        self.update_details();
     }
 
     pub fn popup_widget(&self) -> Option<&Box<dyn Popup>> {

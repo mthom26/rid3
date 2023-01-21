@@ -20,3 +20,4 @@ config = { version = "0.13.3", default-features = false, features = ["toml"] }
 notify = { version = "5.0.0", default-features = false, features = ["macos_kqueue"] }
 futures = "0.3.25"
 directories = "4.0.1"
+regex = "1.7.1"

@@ -51,3 +51,12 @@ pub fn id_to_name(id: &str) -> Result<String, String> {
         _ => Err("Frame not supported".to_string()),
     }
 }
+
+pub fn name_to_id(name: &str) -> Result<String, String> {
+    match name {
+        // TODO - Add all necessary names
+        "title" => Ok("TIT2".to_string()),
+        "track" => Ok("TRCK".to_string()),
+        _ => Err("Name not recognised".to_string()),
+    }
+}
