@@ -6,7 +6,7 @@ use tui::{
 };
 
 use crate::{
-    configuration::actions::Action,
+    configuration::{actions::Action, Config},
     popups::{Popup, PopupData, PopupRender},
     state::AppEvent,
 };
@@ -143,7 +143,7 @@ impl Popup for DoubleInput {
         AppEvent::None
     }
 
-    fn get_widget(&self) -> PopupRender {
+    fn get_widget(&self, config: &Config) -> PopupRender {
         let text_one = format!("┳ {}\n┗ {}\n", "Description", self.description);
         let text_two = format!("┳ {}\n┗ {}\n", "Value", self.value);
         let items = vec![ListItem::new(text_one), ListItem::new(text_two)]; // TODO - Add style from config

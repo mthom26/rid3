@@ -1,12 +1,12 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use tui::{
-    style::{Color, Style},
+    style::Style,
     text::Span,
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
 };
 
 use crate::{
-    configuration::actions::Action,
+    configuration::{actions::Action, Config},
     popups::{Popup, PopupData, PopupRender},
     state::AppEvent,
 };
@@ -20,13 +20,14 @@ pub struct SingleInput {
 }
 
 impl SingleInput {
-    pub fn new(input: &str) -> Self {
+    // TODO - 'text' is currently the frame id, convert to readable name
+    pub fn new(text: &str, input: &str) -> Self {
         let cursor_pos = input.len();
         let mut list_state = ListState::default();
         list_state.select(Some(0));
 
         Self {
-            text: "Text".to_owned(),
+            text: text.to_owned(),
             input: input.to_owned(),
             content: input.to_owned(),
             list_state,
@@ -44,10 +45,6 @@ impl SingleInput {
         if self.cursor_pos > 0 {
             self.cursor_pos -= 1;
         }
-    }
-
-    fn set_cursor_pos(&mut self) {
-        self.cursor_pos = self.input.len();
     }
 }
 
@@ -75,18 +72,17 @@ impl Popup for SingleInput {
         AppEvent::None
     }
 
-    fn get_widget(&self) -> PopupRender {
+    fn get_widget(&self, config: &Config) -> PopupRender {
         let text = format!("┳ {}\n┗ {}\n", self.text, self.content);
-        let items = vec![ListItem::new(text)]; // TODO - Add style from config
+        let items = vec![ListItem::new(text)];
 
-        let list = List::new(items)
-            .block(
-                Block::default().title("Popup One").borders(Borders::ALL), // .style(Style::default().fg(config.help_border()))
-            )
-            .highlight_style(Style::default().bg(Color::Red)); // TODO - Proper styling
+        let list = List::new(items).block(Block::default().title("Frame").borders(Borders::ALL));
 
         let input_block = Paragraph::new(Span::raw(&self.input)).block(
-            Block::default().title("Popup One").borders(Borders::ALL), // .style(Style::default().fg(config.help_border()))
+            Block::default()
+                .title("Input")
+                .borders(Borders::ALL)
+                .style(Style::default().fg(config.help_border())),
         );
 
         PopupRender::SingleInput((list, input_block, self.list_state.clone(), self.cursor_pos))

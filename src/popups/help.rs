@@ -2,7 +2,7 @@ use crossterm::event::KeyEvent;
 use tui::widgets::{Block, Borders, List, ListItem};
 
 use crate::{
-    configuration::actions::Action,
+    configuration::{actions::Action, Config},
     popups::{Popup, PopupRender},
     state::AppEvent,
 };
@@ -24,7 +24,7 @@ impl Popup for HelpPopup {
         AppEvent::ClosePopup
     }
 
-    fn get_widget(&self) -> PopupRender {
+    fn get_widget(&self, config: &Config) -> PopupRender {
         let items: Vec<ListItem> = self
             .data
             .iter()

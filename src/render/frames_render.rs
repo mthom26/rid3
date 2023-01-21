@@ -59,7 +59,7 @@ where
 
         // Popup
         if let Some(popup) = state.popup_widget() {
-            render_popup(size, f, popup);
+            render_popup(size, f, popup, app_config);
         }
     })?;
 

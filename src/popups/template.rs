@@ -6,7 +6,7 @@ use tui::{
 };
 
 use crate::{
-    configuration::actions::Action,
+    configuration::{actions::Action, Config},
     popups::{Popup, PopupData, PopupRender},
     state::AppEvent,
 };
@@ -71,7 +71,7 @@ impl Popup for TemplateInput {
         AppEvent::None
     }
 
-    fn get_widget(&self) -> PopupRender {
+    fn get_widget(&self, config: &Config) -> PopupRender {
         let text = format!("┳ {}\n┗ {}\n", self.text, self.content);
         let items = vec![ListItem::new(text)]; // TODO - Add style from config
 

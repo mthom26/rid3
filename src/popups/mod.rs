@@ -1,7 +1,10 @@
 use crossterm::event::KeyEvent;
 use tui::widgets::{List, ListState, Paragraph};
 
-use crate::{configuration::actions::Action, state::AppEvent};
+use crate::{
+    configuration::{actions::Action, Config},
+    state::AppEvent,
+};
 
 pub mod double_input;
 pub mod help;
@@ -23,5 +26,5 @@ pub enum PopupData {
 
 pub trait Popup {
     fn handle_input(&mut self, key: &KeyEvent, action: Action) -> AppEvent;
-    fn get_widget(&self) -> PopupRender; // TODO - Add `config` here for styling
+    fn get_widget(&self, config: &Config) -> PopupRender;
 }

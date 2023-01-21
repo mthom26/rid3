@@ -549,7 +549,7 @@ impl MainState {
         if let Some(i) = self.details_state.selected() {
             match &self.details[i] {
                 DetailItem::FileName(file_name) => {
-                    let popup = SingleInput::new(&file_name);
+                    let popup = SingleInput::new("Filename", &file_name);
                     self.popup_stack.push(Box::new(popup));
                 }
                 DetailItem::Frame(frame) => match frame.id() {
@@ -565,7 +565,7 @@ impl MainState {
                     }
                     t if t.starts_with("T") => {
                         let text = frame.content().text().expect("Could not get frame text");
-                        let popup = SingleInput::new(text);
+                        let popup = SingleInput::new(t, text);
                         self.popup_stack.push(Box::new(popup));
                     }
                     id => warn!("Unhandled frame type: {}", id),

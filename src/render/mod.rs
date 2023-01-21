@@ -17,7 +17,7 @@ mod logs;
 pub mod main_render;
 use logs::render_logs;
 
-pub fn render_popup<B>(size: Rect, f: &mut Frame<B>, popup: &Box<dyn Popup>)
+pub fn render_popup<B>(size: Rect, f: &mut Frame<B>, popup: &Box<dyn Popup>, config: &Config)
 where
     B: Backend,
 {
@@ -47,7 +47,7 @@ where
 
     f.render_widget(Clear, chunks_vertical[1]);
 
-    let w = popup.get_widget();
+    let w = popup.get_widget(config);
     match w {
         PopupRender::Help(help) => {
             f.render_widget(help, chunks_vertical[1]);
