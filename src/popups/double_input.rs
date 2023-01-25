@@ -1,6 +1,5 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use tui::{
-    style::{Color, Style},
     text::Span,
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
 };
@@ -8,6 +7,7 @@ use tui::{
 use crate::{
     configuration::{actions::Action, Config},
     popups::{Popup, PopupData, PopupRender},
+    render::{basic, border, list_active, window_title},
     state::AppEvent,
 };
 
@@ -146,16 +146,23 @@ impl Popup for DoubleInput {
     fn get_widget(&self, config: &Config) -> PopupRender {
         let text_one = format!("┳ {}\n┗ {}\n", "Description", self.description);
         let text_two = format!("┳ {}\n┗ {}\n", "Value", self.value);
-        let items = vec![ListItem::new(text_one), ListItem::new(text_two)]; // TODO - Add style from config
+        let items = vec![ListItem::new(text_one), ListItem::new(text_two)];
 
         let list = List::new(items)
             .block(
-                Block::default().title("Popup One").borders(Borders::ALL), // .style(Style::default().fg(config.help_border()))
+                Block::default()
+                    .title(Span::styled("Popup One", window_title(config)))
+                    .style(border(config))
+                    .borders(Borders::ALL),
             )
-            .highlight_style(Style::default().bg(Color::Red)); // TODO - Proper styling
+            .style(basic(config))
+            .highlight_style(list_active(config));
 
-        let input_block = Paragraph::new(Span::raw(&self.input)).block(
-            Block::default().title("Popup One").borders(Borders::ALL), // .style(Style::default().fg(config.help_border()))
+        let input_block = Paragraph::new(Span::styled(&self.input, basic(config))).block(
+            Block::default()
+                .title(Span::styled("Popup One", window_title(config)))
+                .style(border(config))
+                .borders(Borders::ALL),
         );
 
         PopupRender::DoubleInput((list, input_block, self.list_state.clone(), self.cursor_pos))

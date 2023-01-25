@@ -79,10 +79,7 @@ impl Popup for SingleInput {
         let list = List::new(items).block(Block::default().title("Frame").borders(Borders::ALL));
 
         let input_block = Paragraph::new(Span::raw(&self.input)).block(
-            Block::default()
-                .title("Input")
-                .borders(Borders::ALL)
-                .style(Style::default().fg(config.help_border())),
+            Block::default().title("Input").borders(Borders::ALL), // .style(Style::default().fg(config.help_border())),
         );
 
         PopupRender::SingleInput((list, input_block, self.list_state.clone(), self.cursor_pos))

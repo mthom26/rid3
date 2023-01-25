@@ -5,7 +5,11 @@ use tui::{
     widgets::{Block, Borders, List, ListItem},
 };
 
-use crate::{configuration::Config, logger::Logger};
+use crate::{
+    configuration::Config,
+    logger::Logger,
+    render::{basic, border, window_title},
+};
 
 pub fn render_logs<'a>(config: &Config, log_state: &Logger) -> List<'a> {
     let index = *log_state.index.lock().expect("Could not acquire lock");
@@ -44,5 +48,12 @@ pub fn render_logs<'a>(config: &Config, log_state: &Logger) -> List<'a> {
     };
 
     let title = format!("Logs {}/{}", index + 1, last_index + 1);
-    List::new(log_items).block(Block::default().title(title).borders(Borders::ALL))
+    List::new(log_items)
+        .block(
+            Block::default()
+                .title(Span::styled(title, window_title(config)))
+                .style(border(config))
+                .borders(Borders::ALL),
+        )
+        .style(basic(config))
 }

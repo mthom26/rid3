@@ -69,14 +69,22 @@ impl<'de> Visitor<'de> for ColorVisitor {
 
 #[derive(Debug, Deserialize)]
 pub struct Theme {
-    pub list_item_fg: Color,
-    pub list_item_bg: Color,
-    pub active_list_item_fg: Color,
-    pub active_list_item_bg: Color,
-    pub inactive_list_item_fg: Color,
-    pub inactive_list_item_bg: Color,
+    pub basic_fg: Color,
+    pub basic_bg: Color,
+    pub window_border: Color,
+    pub window_title: Color,
+    pub active_window_title: Color,
+    pub active_border: Color,
+    pub active_title: Color,
 
-    pub help_border: Color,
+    pub list_highlighted_fg: Color,
+    pub list_highlighted_bg: Color,
+    pub list_active_fg: Color,
+    pub list_active_bg: Color,
+
+    pub list_directory_fg: Color,
+    // pub list_directory_active_fg: Color,
+    // pub list_directory_active_bg: Color,
 
     pub log_error_fg: Color,
     pub log_info_fg: Color,

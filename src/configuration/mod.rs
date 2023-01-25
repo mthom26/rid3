@@ -63,32 +63,48 @@ impl Config {
         }
     }
 
-    pub fn list_item_fg(&self) -> Color {
-        self.theme.list_item_fg.into()
+    pub fn basic_fg(&self) -> Color {
+        self.theme.basic_fg.into()
     }
 
-    pub fn list_item_bg(&self) -> Color {
-        self.theme.list_item_bg.into()
+    pub fn basic_bg(&self) -> Color {
+        self.theme.basic_bg.into()
     }
 
-    pub fn active_list_item_fg(&self) -> Color {
-        self.theme.active_list_item_fg.into()
+    pub fn window_border(&self) -> Color {
+        self.theme.window_border.into()
     }
 
-    pub fn active_list_item_bg(&self) -> Color {
-        self.theme.active_list_item_bg.into()
+    pub fn window_title(&self) -> Color {
+        self.theme.window_title.into()
     }
 
-    pub fn inactive_list_item_fg(&self) -> Color {
-        self.theme.inactive_list_item_fg.into()
+    pub fn active_window_title(&self) -> Color {
+        self.theme.active_window_title.into()
     }
 
-    pub fn inactive_list_item_bg(&self) -> Color {
-        self.theme.inactive_list_item_bg.into()
+    pub fn active_border(&self) -> Color {
+        self.theme.active_border.into()
     }
 
-    pub fn help_border(&self) -> Color {
-        self.theme.help_border.into()
+    pub fn list_highlighted_fg(&self) -> Color {
+        self.theme.list_highlighted_fg.into()
+    }
+
+    pub fn list_highlighted_bg(&self) -> Color {
+        self.theme.list_highlighted_bg.into()
+    }
+
+    pub fn list_active_fg(&self) -> Color {
+        self.theme.list_active_fg.into()
+    }
+
+    pub fn list_active_bg(&self) -> Color {
+        self.theme.list_active_bg.into()
+    }
+
+    pub fn list_directory(&self) -> Color {
+        self.theme.list_directory_fg.into()
     }
 
     pub fn log_error_fg(&self) -> Color {

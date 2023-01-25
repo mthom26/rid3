@@ -1,13 +1,21 @@
 pub const DEFAULT_CONFIG: &str = r#"
     [theme]
-    list_item_fg = 'LightGreen'
-    list_item_bg = 'Reset'
-    active_list_item_fg = 'LightYellow'
-    active_list_item_bg = 'DarkGray'
-    inactive_list_item_fg = 'LightGreen'
-    inactive_list_item_bg = 'DarkGray'
+    basic_fg = 'Gray'
+    basic_bg = 'Reset'
+    window_border = 'Blue'
+    window_title = 'LightRed'
+    active_window_title = 'Gray'
+    active_border = 'Gray'
+    active_title = 'Gray'
 
-    help_border = 'LightYellow'
+    list_highlighted_fg = 'LightGreen'
+    list_highlighted_bg = 'DarkGray'
+    list_active_fg = 'LightYellow'
+    list_active_bg = 'DarkGray'
+
+    list_directory_fg = 'Blue'
+    #list_directory_active_fg = 'Blue'
+    #list_directory_active_bg = 'DarkGray'
 
     log_error_fg = 'Red'
     log_info_fg = 'Blue'

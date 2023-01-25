@@ -2,17 +2,18 @@ use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout},
     terminal::Terminal,
+    text::Span,
     widgets::{Block, Borders, List, ListItem},
 };
 
 use crate::{
     configuration::Config,
     logger::Logger,
-    render::{inactive_list_item, list_item},
+    render::{
+        basic, border, list_active, render_logs, render_popup, window_title,
+    },
     state::{frame_data::SUPPORTED_FRAMES, frames_state::FramesState},
 };
-
-use crate::render::{logs::render_logs, render_popup};
 
 pub fn frames_render<B>(
     terminal: &mut Terminal<B>,
@@ -42,12 +43,17 @@ where
         // Frames list
         let frames: Vec<ListItem> = SUPPORTED_FRAMES
             .iter()
-            .map(|frame| ListItem::new(frame.name).style(list_item(app_config)))
+            .map(|frame| ListItem::new(frame.name).style(basic(app_config)))
             .collect();
 
         let block = List::new(frames)
-            .block(Block::default().title("Frames").borders(Borders::ALL))
-            .highlight_style(inactive_list_item(app_config));
+            .block(
+                Block::default()
+                    .title(Span::styled("Frames", window_title(app_config)))
+                    .style(border(app_config))
+                    .borders(Borders::ALL),
+            )
+            .highlight_style(list_active(app_config));
 
         f.render_stateful_widget(block, chunks[0], &mut state.frames_state);
 

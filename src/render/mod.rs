@@ -85,25 +85,41 @@ where
     }
 }
 
-// Style for list item
-pub fn list_item(config: &Config) -> Style {
-    Style::default()
-        .fg(config.list_item_fg())
-        .bg(config.list_item_bg())
+// Styles
+pub fn basic(config: &Config) -> Style {
+    Style::default().fg(config.basic_fg()).bg(config.basic_bg())
 }
 
-// Style for currently focused selected list item
-pub fn active_list_item(config: &Config) -> Style {
+pub fn border(config: &Config) -> Style {
+    Style::default().fg(config.window_border())
+}
+
+pub fn active_border(config: &Config) -> Style {
+    Style::default().fg(config.active_border())
+}
+
+pub fn window_title(config: &Config) -> Style {
+    Style::default().fg(config.window_title())
+}
+
+pub fn active_window_title(config: &Config) -> Style {
+    Style::default().fg(config.active_window_title())
+}
+
+pub fn list_highlighted(config: &Config) -> Style {
     Style::default()
-        .fg(config.active_list_item_fg())
-        .bg(config.active_list_item_bg())
+        .fg(config.list_highlighted_fg())
+        .bg(config.list_highlighted_bg())
         .add_modifier(Modifier::BOLD)
 }
 
-// Style for unfocused selected list item
-pub fn inactive_list_item(config: &Config) -> Style {
+pub fn list_active(config: &Config) -> Style {
     Style::default()
-        .fg(config.inactive_list_item_fg())
-        .bg(config.inactive_list_item_bg())
+        .fg(config.list_active_fg())
+        .bg(config.list_active_bg())
         .add_modifier(Modifier::BOLD)
+}
+
+pub fn list_directory(config: &Config) -> Style {
+    Style::default().fg(config.list_directory())
 }

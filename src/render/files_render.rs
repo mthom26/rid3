@@ -1,19 +1,20 @@
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout},
-    style::{Color, Style},
     terminal::Terminal,
+    text::Span,
     widgets::{Block, Borders, List, ListItem},
 };
 
 use crate::{
     configuration::Config,
     logger::Logger,
-    render::inactive_list_item,
+    render::{
+        basic, border, list_active, list_directory, render_logs, render_popup,
+        window_title,
+    },
     state::files_state::{FilesState, FilesStateItem},
 };
-
-use crate::render::{logs::render_logs, render_popup};
 
 pub fn files_render<B>(
     terminal: &mut Terminal<B>,
@@ -49,14 +50,12 @@ where
                         .into_string()
                         .expect("Could not parse OsString"),
                     if entry.file_type().unwrap().is_dir() {
-                        Style::default().fg(Color::LightBlue)
+                        list_directory(app_config)
                     } else {
-                        Style::default().fg(Color::LightGreen)
+                        basic(app_config)
                     },
                 ),
-                FilesStateItem::Parent => {
-                    ("../".to_owned(), Style::default().fg(Color::LightYellow))
-                }
+                FilesStateItem::Parent => ("../".to_owned(), list_directory(app_config)),
             };
 
             items.push(ListItem::new(text).style(style));
@@ -69,8 +68,13 @@ where
         };
 
         let block = List::new(items)
-            .block(Block::default().title(title).borders(Borders::ALL))
-            .highlight_style(inactive_list_item(app_config));
+            .block(
+                Block::default()
+                    .title(Span::styled(title, window_title(app_config)))
+                    .style(border(app_config))
+                    .borders(Borders::ALL),
+            )
+            .highlight_style(list_active(app_config));
 
         f.render_stateful_widget(block, chunks[0], &mut state.files_state);
 
