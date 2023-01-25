@@ -1,6 +1,5 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use tui::{
-    style::Style,
     text::Span,
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
 };
@@ -8,6 +7,7 @@ use tui::{
 use crate::{
     configuration::{actions::Action, Config},
     popups::{Popup, PopupData, PopupRender},
+    render::{basic, border, window_title},
     state::AppEvent,
 };
 
@@ -76,10 +76,20 @@ impl Popup for SingleInput {
         let text = format!("┳ {}\n┗ {}\n", self.text, self.content);
         let items = vec![ListItem::new(text)];
 
-        let list = List::new(items).block(Block::default().title("Frame").borders(Borders::ALL));
+        let list = List::new(items)
+            .block(
+                Block::default()
+                    .title(Span::styled("Frame", window_title(config)))
+                    .style(border(config))
+                    .borders(Borders::ALL),
+            )
+            .style(basic(config));
 
-        let input_block = Paragraph::new(Span::raw(&self.input)).block(
-            Block::default().title("Input").borders(Borders::ALL), // .style(Style::default().fg(config.help_border())),
+        let input_block = Paragraph::new(Span::styled(&self.input, basic(config))).block(
+            Block::default()
+                .title(Span::styled("Input", window_title(config)))
+                .style(border(config))
+                .borders(Borders::ALL),
         );
 
         PopupRender::SingleInput((list, input_block, self.list_state.clone(), self.cursor_pos))

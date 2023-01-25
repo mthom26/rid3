@@ -9,10 +9,7 @@ use tui::{
 use crate::{
     configuration::Config,
     logger::Logger,
-    render::{
-        basic, border, list_active, list_directory, render_logs, render_popup,
-        window_title,
-    },
+    render::{basic, border, list_active, list_directory, render_logs, render_popup, window_title},
     state::files_state::{FilesState, FilesStateItem},
 };
 

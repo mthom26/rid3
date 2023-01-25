@@ -85,7 +85,6 @@ pub struct Theme {
     pub list_directory_fg: Color,
     // pub list_directory_active_fg: Color,
     // pub list_directory_active_bg: Color,
-
     pub log_error_fg: Color,
     pub log_info_fg: Color,
     pub log_trace_fg: Color,

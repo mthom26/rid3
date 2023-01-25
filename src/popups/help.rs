@@ -1,9 +1,13 @@
 use crossterm::event::KeyEvent;
-use tui::widgets::{Block, Borders, List, ListItem};
+use tui::{
+    text::Span,
+    widgets::{Block, Borders, List, ListItem},
+};
 
 use crate::{
     configuration::{actions::Action, Config},
     popups::{Popup, PopupRender},
+    render::{basic, border, window_title},
     state::AppEvent,
 };
 
@@ -32,11 +36,14 @@ impl Popup for HelpPopup {
             .collect();
 
         PopupRender::Help(
-            List::new(items).block(
-                Block::default()
-                    .title(self.title.clone())
-                    .borders(Borders::ALL),
-            ),
+            List::new(items)
+                .block(
+                    Block::default()
+                        .title(Span::styled(self.title.clone(), window_title(config)))
+                        .style(border(config))
+                        .borders(Borders::ALL),
+                )
+                .style(basic(config)),
         )
     }
 }

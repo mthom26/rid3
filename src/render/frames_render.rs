@@ -9,9 +9,7 @@ use tui::{
 use crate::{
     configuration::Config,
     logger::Logger,
-    render::{
-        basic, border, list_active, render_logs, render_popup, window_title,
-    },
+    render::{basic, border, list_active, render_logs, render_popup, window_title},
     state::{frame_data::SUPPORTED_FRAMES, frames_state::FramesState},
 };
 

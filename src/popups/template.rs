@@ -1,6 +1,5 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use tui::{
-    style::{Color, Style},
     text::Span,
     widgets::{Block, Borders, List, ListItem, Paragraph},
 };
@@ -8,6 +7,7 @@ use tui::{
 use crate::{
     configuration::{actions::Action, Config},
     popups::{Popup, PopupData, PopupRender},
+    render::{basic, border, window_title},
     state::AppEvent,
 };
 
@@ -41,10 +41,6 @@ impl TemplateInput {
             self.cursor_pos -= 1;
         }
     }
-
-    fn set_cursor_pos(&mut self) {
-        self.cursor_pos = self.input.len();
-    }
 }
 
 impl Popup for TemplateInput {
@@ -73,16 +69,22 @@ impl Popup for TemplateInput {
 
     fn get_widget(&self, config: &Config) -> PopupRender {
         let text = format!("┳ {}\n┗ {}\n", self.text, self.content);
-        let items = vec![ListItem::new(text)]; // TODO - Add style from config
+        let items = vec![ListItem::new(text)];
 
         let list = List::new(items)
             .block(
-                Block::default().title("Template").borders(Borders::ALL), // .style(Style::default().fg(config.help_border()))
+                Block::default()
+                    .title(Span::styled("Template", window_title(config)))
+                    .style(border(config))
+                    .borders(Borders::ALL),
             )
-            .highlight_style(Style::default().bg(Color::Red)); // TODO - Proper styling
+            .style(basic(config));
 
-        let input_block = Paragraph::new(Span::raw(&self.input)).block(
-            Block::default().title("Popup One").borders(Borders::ALL), // .style(Style::default().fg(config.help_border()))
+        let input_block = Paragraph::new(Span::styled(&self.input, basic(config))).block(
+            Block::default()
+                .title(Span::styled("Input", window_title(config)))
+                .style(border(config))
+                .borders(Borders::ALL),
         );
 
         PopupRender::TemplateInput((list, input_block, self.cursor_pos))
