@@ -52,6 +52,7 @@ pub const DEFAULT_CONFIG: &str = r#"
     add_all_files = 'a'
     parent_directory = 'b'
     enter_directory = 'Enter'
+    show_hidden = 't'
 
     # Frames Screen Actions
     add_frame = 'a'

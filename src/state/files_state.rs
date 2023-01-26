@@ -65,6 +65,7 @@ impl FilesState {
                     || *a == Action::AddFile
                     || *a == Action::ParentDir
                     || *a == Action::EnterDir
+                    || *a == Action::HiddenDir
                 {
                     action = *a;
                     break;
@@ -106,6 +107,12 @@ impl FilesState {
                                 warn!("{}", e);
                             }
                         }
+                    }
+                }
+                Action::HiddenDir => {
+                    self.show_hidden_dirs = !self.show_hidden_dirs;
+                    if let Err(e) = self.refresh_dir() {
+                        warn!("{}", e);
                     }
                 }
                 _ => {}
@@ -166,6 +173,16 @@ impl FilesState {
             None => { /* Must be at root */ }
         }
 
+        Ok(())
+    }
+
+    // Rebuild files list of current directory
+    fn refresh_dir(&mut self) -> Result<(), anyhow::Error> {
+        let files = get_entries(&self.current_dir, self.show_hidden_dirs)?;
+        self.files = files;
+        sort_files(&mut self.files);
+        self.files_state = ListState::default();
+        self.files_state.select(Some(0));
         Ok(())
     }
 

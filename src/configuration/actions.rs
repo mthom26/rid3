@@ -88,6 +88,7 @@ pub enum Action {
     AddFile,     // Add highlighted file
     ParentDir,   // Move to parent directory
     EnterDir,
+    HiddenDir,  // Toggle display of hidden directories
 
     // FramesState Actions
     AddFrame,
@@ -151,6 +152,7 @@ impl<'de> Visitor<'de> for ActionVisitor {
             "add_all_files" => Ok(Action::AddAllFiles),
             "parent_directory" => Ok(Action::ParentDir),
             "enter_directory" => Ok(Action::EnterDir),
+            "show_hidden" => Ok(Action::HiddenDir),
             // FramesState Actions
             "add_frame" => Ok(Action::AddFrame),
             // Popup Actions
