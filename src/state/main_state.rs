@@ -142,6 +142,7 @@ impl MainState {
                         || *a == Action::SelectAll
                         || *a == Action::Remove
                         || *a == Action::SpawnPopup
+                        || *a == Action::TemplatePopup
                     {
                         action = *a;
                         break;
@@ -355,13 +356,19 @@ impl MainState {
         self.details_state = ListState::default();
     }
 
-    // Remove all selected files
-    // TODO - Remove highlighted that is not selected but is highlighted
+    // Remove all selected and highlighted files
     fn remove_files(&mut self) {
+        let highlighted_filename = if let Some(i) = self.files_state.selected() {
+            self.files[i].filename.clone()
+        } else {
+            "".to_owned() // Filename will never be empty so empty string will never be matched
+        };
+
         self.files = self
             .files
             .iter()
             .filter(|file| !file.selected)
+            .filter(|file| file.filename != highlighted_filename)
             .map(|file| file.clone())
             .collect();
 

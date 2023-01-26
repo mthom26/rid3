@@ -88,7 +88,7 @@ pub enum Action {
     AddFile,     // Add highlighted file
     ParentDir,   // Move to parent directory
     EnterDir,
-    HiddenDir,  // Toggle display of hidden directories
+    HiddenDir, // Toggle display of hidden directories
 
     // FramesState Actions
     AddFrame,
