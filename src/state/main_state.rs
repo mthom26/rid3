@@ -680,8 +680,9 @@ impl MainState {
         let remove = config.get_key(&Action::Remove).unwrap();
         let select_all = config.get_key(&Action::SelectAll).unwrap();
         let select = config.get_key(&Action::SelectCurrent).unwrap();
-        // TODO - let update = config.get_key().unwrap();
         let write = config.get_key(&Action::WriteTags).unwrap();
+        let template = config.get_key(&Action::TemplatePopup).unwrap();
+        let update = config.get_key(&Action::UpdateNames).unwrap();
 
         self.help_text = vec![
             format!("`{}` - Quit", util::display_keycode(quit)),
@@ -699,6 +700,14 @@ impl MainState {
                 util::display_keycode(select_all)
             ),
             format!("`{}` - Write changes", util::display_keycode(write)),
+            format!(
+                "`{}` - Spawn file rename template popup",
+                util::display_keycode(template)
+            ),
+            format!(
+                "`{}` - Update filenames using current template",
+                util::display_keycode(update)
+            ),
         ];
     }
 }
