@@ -510,15 +510,18 @@ impl MainState {
             _ => Frame::text(id, ""),
         };
 
-        for entry in self.files.iter_mut() {
-            if entry.selected {
-                // TODO - Check if frame already exists, if it does
-                //        don't overwrite existing content
-                entry.tag.add_frame(frame.clone());
+        let highlighted = self.files_state.selected();
+        for (i, entry) in self.files.iter_mut().enumerate() {
+            if entry.selected || highlighted.is_some() && highlighted.unwrap() == i {
+                if frame.id() != "TXXX" {
+                    if entry.tag.get(frame.id()).is_none() {
+                        entry.tag.add_frame(frame.clone());
+                    }
+                } else {
+                    // Multiple TXXX frames allowed so add a new one even if one already exists
+                    entry.tag.add_frame(frame.clone());
+                }
             }
-        }
-        if let Some(i) = self.files_state.selected() {
-            self.files[i].tag.add_frame(frame);
         }
 
         self.update_details();
