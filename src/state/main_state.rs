@@ -527,29 +527,42 @@ impl MainState {
         self.update_details();
     }
 
-    // Remove selected frame from all selected files
-    // TODO - Currently this removes all `TXXX` frames instead of just the
-    //        highlighted one, need to fix this
+    // Remove selected frame from all selected or highlighted files
     fn remove_frames(&mut self) {
-        let id = if let Some(i) = self.details_state.selected() {
+        let (id, desc) = if let Some(i) = self.details_state.selected() {
             match &self.details[i] {
                 DetailItem::FileName(_) => {
                     warn!("Not a frame");
                     return;
                 }
-                DetailItem::Frame(frame) => frame.id(),
+                DetailItem::Frame(frame) => match frame.id() {
+                    "TXXX" => (
+                        frame.id(),
+                        Some(
+                            frame
+                                .content()
+                                .extended_text()
+                                .unwrap() // Frame id is 'TXXX' so this should not panic
+                                .description
+                                .as_str(),
+                        ),
+                    ),
+                    _ => (frame.id(), None),
+                },
             }
         } else {
             unreachable!();
         };
 
-        for file in &mut self.files {
-            if file.selected {
-                file.tag.remove(id);
+        let highlighted = self.files_state.selected();
+        for (i, file) in &mut self.files.iter_mut().enumerate() {
+            if file.selected || highlighted.is_some() && highlighted.unwrap() == i {
+                if id == "TXXX" {
+                    file.tag.remove_extended_text(desc, None);
+                } else {
+                    file.tag.remove(id);
+                }
             }
-        }
-        if let Some(i) = self.files_state.selected() {
-            self.files[i].tag.remove(id);
         }
 
         self.update_details();
