@@ -2,14 +2,16 @@ use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout},
     terminal::Terminal,
-    text::Span,
-    widgets::{Block, Borders, List, ListItem},
+    text::{Span, Spans},
+    widgets::{Block, Borders, List, ListItem, Paragraph, Wrap},
 };
 
 use crate::{
     configuration::Config,
     logger::Logger,
-    render::{basic, border, list_active, render_logs, render_popup, window_title},
+    render::{
+        basic, border, list_active, render_logs, render_popup, secondary_title, window_title,
+    },
     state::{frame_data::SUPPORTED_FRAMES, frames_state::FramesState},
 };
 
@@ -38,6 +40,11 @@ where
                 .split(size)
         };
 
+        let chunks_top = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
+            .split(chunks[0]);
+
         // Frames list
         let frames: Vec<ListItem> = SUPPORTED_FRAMES
             .iter()
@@ -53,7 +60,38 @@ where
             )
             .highlight_style(list_active(app_config));
 
-        f.render_stateful_widget(block, chunks[0], &mut state.frames_state);
+        f.render_stateful_widget(block, chunks_top[0], &mut state.frames_state);
+
+        // Frame Information
+        let (name, id, desc) = match state.frames_state.selected() {
+            Some(i) => (
+                SUPPORTED_FRAMES[i].name,
+                SUPPORTED_FRAMES[i].id,
+                SUPPORTED_FRAMES[i].description,
+            ),
+            None => ("", "", ""),
+        };
+
+        let text = vec![
+            Spans::from(Span::styled("Name:", secondary_title(app_config))),
+            Spans::from(Span::styled(name, basic(app_config))),
+            Spans::from(Span::raw("")),
+            Spans::from(Span::styled("ID:", secondary_title(app_config))),
+            Spans::from(Span::styled(id, basic(app_config))),
+            Spans::from(Span::raw("")),
+            Spans::from(Span::styled("Description:", secondary_title(app_config))),
+            Spans::from(Span::styled(desc, basic(app_config))),
+        ];
+        let paragraph = Paragraph::new(text)
+            .block(
+                Block::default()
+                    .title(Span::styled("Frame Info", window_title(app_config)))
+                    .style(border(app_config))
+                    .borders(Borders::ALL),
+            )
+            .wrap(Wrap { trim: false });
+
+        f.render_widget(paragraph, chunks_top[1]);
 
         // Logs
         if show_logs {

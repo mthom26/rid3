@@ -102,6 +102,10 @@ pub fn window_title(config: &Config) -> Style {
     Style::default().fg(config.window_title())
 }
 
+pub fn secondary_title(config: &Config) -> Style {
+    Style::default().fg(config.secondary_title())
+}
+
 pub fn active_window_title(config: &Config) -> Style {
     Style::default().fg(config.active_window_title())
 }

@@ -73,6 +73,7 @@ pub struct Theme {
     pub basic_bg: Color,
     pub window_border: Color,
     pub window_title: Color,
+    pub secondary_title: Color,
     pub active_window_title: Color,
     pub active_border: Color,
     pub active_title: Color,

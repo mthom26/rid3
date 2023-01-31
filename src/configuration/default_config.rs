@@ -4,6 +4,7 @@ pub const DEFAULT_CONFIG: &str = r#"
     basic_bg = 'Reset'
     window_border = 'Blue'
     window_title = 'LightRed'
+    secondary_title = 'Blue'
     active_window_title = 'Gray'
     active_border = 'Gray'
     active_title = 'Gray'

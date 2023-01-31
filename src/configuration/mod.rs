@@ -79,6 +79,10 @@ impl Config {
         self.theme.window_title.into()
     }
 
+    pub fn secondary_title(&self) -> Color {
+        self.theme.secondary_title.into()
+    }
+
     pub fn active_window_title(&self) -> Color {
         self.theme.active_window_title.into()
     }
