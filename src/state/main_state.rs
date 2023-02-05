@@ -100,7 +100,7 @@ pub struct MainState {
 }
 
 impl MainState {
-    pub fn new() -> Self {
+    pub fn new(template_string: String) -> Self {
         let popup_stack: Vec<Box<dyn Popup>> = vec![];
         let rex = Regex::new(r"\{[\w]+\}").unwrap();
 
@@ -112,7 +112,7 @@ impl MainState {
             details_state: ListState::default(),
             details: vec![],
             help_text: vec![],
-            template_string: "{track} {title}.mp3".to_string(),
+            template_string,
             rex,
         }
     }
@@ -620,6 +620,8 @@ impl MainState {
         Ok(())
     }
 
+    // TODO - Format track numbers with a leading zero
+    //      - Add warning for malformed template string
     fn update_filenames(&mut self) {
         let mats: Vec<Match> = self.rex.find_iter(&self.template_string).collect();
 

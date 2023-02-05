@@ -55,7 +55,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut app_config = Config::new();
 
     let mut screen_state = ScreenState::Main;
-    let mut main_state = MainState::new();
+    let mut main_state = MainState::new(app_config.get_template_string());
     let mut files_state = FilesState::new(dir)?;
     let mut frames_state = FramesState::new();
     main_state.update_help_text(&app_config);

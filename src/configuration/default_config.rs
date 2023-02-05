@@ -1,4 +1,7 @@
 pub const DEFAULT_CONFIG: &str = r#"
+    [general]
+    template_string = '{track} {title}.mp3'
+
     [theme]
     basic_fg = 'Gray'
     basic_bg = 'Reset'
