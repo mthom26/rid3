@@ -11,6 +11,7 @@ pub enum AppEvent {
     AddFrame(&'static str),
     SwitchScreen(ScreenState),
     ClosePopupData(PopupData),
+    UpdateConfig,
     ClosePopup,
     Quit,
     None,

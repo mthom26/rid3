@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, fs, path::PathBuf};
 
 use config::{self, File, FileFormat};
 use crossterm::event::KeyCode;
@@ -195,4 +195,31 @@ fn get_config(i_conf: IConfig) -> Config {
         keys,
         general,
     }
+}
+
+// Update configuration file with new template_string
+pub fn update_config(template_string: &str) -> Result<(), anyhow::Error> {
+    if let Some(dir) = get_config_dir() {
+        let path_buf = dir.join("config.toml");
+        if path_buf.exists() {
+            let mut contents: Vec<String> = fs::read_to_string(&path_buf)?
+                .split('\n')
+                .map(|s| s.to_owned())
+                .collect();
+            
+            // TODO - This code assumes that the config file contains a `[general]` table
+            //        with a `template_string` value. One or both of these may be missing
+            //        which will need to be handled.
+            for line in contents.iter_mut() {
+                if line.starts_with("template_string") {
+                    *line = format!("template_string = '{}'", template_string);
+                    break;
+                }
+            }
+
+            let s = contents.join("\n");
+            fs::write(path_buf, s)?;
+        }
+    }
+    Ok(())
 }

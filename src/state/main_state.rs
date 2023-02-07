@@ -95,7 +95,7 @@ pub struct MainState {
     pub details: Vec<DetailItem>,
 
     help_text: Vec<String>,
-    template_string: String,
+    pub template_string: String,
     rex: Regex,
 }
 
@@ -240,6 +240,7 @@ impl MainState {
                             }
                             info!("Updating template string to '{}'", text);
                             self.template_string = text;
+                            return AppEvent::UpdateConfig;
                         }
                     }
                 }

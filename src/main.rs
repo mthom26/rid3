@@ -61,7 +61,9 @@ async fn main() -> Result<(), anyhow::Error> {
     main_state.update_help_text(&app_config);
     files_state.update_help_text(&app_config);
     frames_state.update_help_text(&app_config);
+
     let mut show_logs = true;
+    let mut update_config = false;
 
     let (input_tx, mut input_rx) = mpsc::channel(32);
     let (timer_tx, mut timer_rx) = mpsc::channel(32);
@@ -168,6 +170,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 match screen_state {
                     ScreenState::Main => match main_state.handle_input(&key, &actions, &mut show_logs) {
                         AppEvent::Quit => break,
+                        AppEvent::UpdateConfig => update_config = true,
                         AppEvent::SwitchScreen(s) => screen_state = s,
                         _ => {}
                     }
@@ -211,6 +214,10 @@ async fn main() -> Result<(), anyhow::Error> {
 
     quit_tx.send(()).unwrap();
     quit_tx.closed().await;
+
+    if update_config {
+        configuration::update_config(&main_state.template_string)?;
+    }
 
     crossterm::terminal::disable_raw_mode()?;
     terminal.backend_mut().execute(LeaveAlternateScreen)?;
