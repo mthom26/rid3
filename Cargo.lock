@@ -590,7 +590,6 @@ dependencies = [
  "regex",
  "serde",
  "tokio",
- "toml",
  "tui",
 ]
 

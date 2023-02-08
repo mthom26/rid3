@@ -12,7 +12,7 @@ anyhow = "1.0.58"
 id3 = "1.2"
 tokio = { version = "1.19.2", features = ["rt-multi-thread", "macros", "sync", "time"] }
 log = "0.4.17"
-toml = "0.5.9"
+# toml = "0.5.9"
 serde = "1.0.139"
 clap = "3.2.16"
 colorsys = "0.6.6"
