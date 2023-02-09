@@ -607,7 +607,45 @@ impl MainState {
     fn write_tags(&mut self) -> Result<(), anyhow::Error> {
         info!("Writing tags to files...");
         for entry in self.files.iter_mut() {
-            entry.tag.write_to_path(&entry.path, Version::Id3v24)?;
+            // Check for empty tags and frames before writing to the file, currently
+            // this will write nothing to the file even if there are valid frames to
+            // write and only one error is found
+            let mut abort_write = false;
+            for frame in entry.tag.frames() {
+                match frame.content() {
+                    Content::Text(t) => {
+                        if t.is_empty() {
+                            error!(
+                                "{} - {} frame empty, not writing tag",
+                                entry.filename,
+                                frame.id()
+                            );
+                            abort_write = true;
+                        }
+                    }
+                    Content::ExtendedText(ExtendedText { description, value }) => {
+                        if description.is_empty() || value.is_empty() {
+                            error!(
+                                "{} - {} frame empty, not writing tag",
+                                entry.filename,
+                                frame.id()
+                            );
+                            abort_write = true;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+
+            if !abort_write && entry.tag.frames().count() != 0 {
+                entry.tag.write_to_path(&entry.path, Version::Id3v24)?;
+            }
+            // TODO - There are still some edge cases left. If all frames are removed this
+            //        implies that the user wishes to delete the tag from the file which does
+            //        not happen yet. However it is currently possible for a file to have a
+            //        tag with a frame that is not supported (and is not shown in the UI). In
+            //        this case the tag should not be removed (the user also needs to be made
+            //        aware of what happened)
 
             // Rename the file, for now the extension must be included
             // when the user enters the new filename

@@ -206,7 +206,7 @@ pub fn update_config(template_string: &str) -> Result<(), anyhow::Error> {
                 .split('\n')
                 .map(|s| s.to_owned())
                 .collect();
-            
+
             // TODO - This code assumes that the config file contains a `[general]` table
             //        with a `template_string` value. One or both of these may be missing
             //        which will need to be handled.
