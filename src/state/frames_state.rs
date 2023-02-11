@@ -65,7 +65,10 @@ impl FramesState {
                 Action::ToggleLogs => *show_logs = !*show_logs,
                 Action::LogsPrev => LOGGER.prev(),
                 Action::LogsNext => LOGGER.next(),
-                Action::Help => self.spawn_help_popup(),
+                Action::Help => self.spawn_help_popup(HelpPopup::new(
+                    "Frames Help".to_owned(),
+                    self.help_text.clone(),
+                )),
                 Action::Prev => self.prev(),
                 Action::Next => self.next(),
                 Action::AddFrame => return AppEvent::AddFrame(self.frame_id()),
@@ -102,11 +105,8 @@ impl FramesState {
         self.popup_stack.last()
     }
 
-    pub fn spawn_help_popup(&mut self) {
-        self.popup_stack.push(Box::new(HelpPopup::new(
-            "Frames Help".to_owned(),
-            self.help_text.clone(),
-        )));
+    pub fn spawn_help_popup(&mut self, help_popup: HelpPopup) {
+        self.popup_stack.push(Box::new(help_popup));
     }
 
     pub fn update_help_text(&mut self, config: &Config) {

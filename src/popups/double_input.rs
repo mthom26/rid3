@@ -6,7 +6,7 @@ use tui::{
 
 use crate::{
     configuration::{actions::Action, Config},
-    popups::{Popup, PopupData, PopupRender},
+    popups::{Popup, PopupData, PopupHelpType, PopupRender},
     render::{basic, border, list_active, window_title},
     state::AppEvent,
 };
@@ -104,6 +104,7 @@ impl Popup for DoubleInput {
                         self.value.clone(),
                     ))
                 }
+                Action::Help => return AppEvent::PopupHelp(PopupHelpType::DoubleInput),
                 _ => {}
             }
         } else {

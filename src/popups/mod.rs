@@ -24,6 +24,10 @@ pub enum PopupData {
     TemplateInput(String),
 }
 
+pub enum PopupHelpType {
+    DoubleInput,
+}
+
 pub trait Popup {
     fn handle_input(&mut self, key: &KeyEvent, action: Action) -> AppEvent;
     fn get_widget(&self, config: &Config) -> PopupRender;

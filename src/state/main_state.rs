@@ -14,7 +14,7 @@ use crate::{
     configuration::{actions::Action, Config},
     popups::{
         double_input::DoubleInput, help::HelpPopup, single_input::SingleInput,
-        template::TemplateInput, Popup, PopupData,
+        template::TemplateInput, Popup, PopupData, PopupHelpType,
     },
     state::{frame_data, update_screen_state, AppEvent, ScreenState},
     util, LOGGER,
@@ -244,6 +244,15 @@ impl MainState {
                         }
                     }
                 }
+                AppEvent::PopupHelp(help_type) => {
+                    let help_popup = match help_type {
+                        PopupHelpType::DoubleInput => HelpPopup::new(
+                            "Double Input Popup Help".to_owned(),
+                            vec!["TODO".to_owned()],
+                        ),
+                    };
+                    self.spawn_help_popup(help_popup);
+                }
                 AppEvent::SwitchScreen(s) => return update_screen_state(s),
                 _ => {}
             }
@@ -256,7 +265,10 @@ impl MainState {
                 Action::ToggleLogs => *show_logs = !*show_logs,
                 Action::LogsPrev => LOGGER.prev(),
                 Action::LogsNext => LOGGER.next(),
-                Action::Help => self.spawn_help_popup(),
+                Action::Help => self.spawn_help_popup(HelpPopup::new(
+                    "Main Help".to_owned(),
+                    self.help_text.clone(),
+                )),
                 Action::Prev => self.prev(),
                 Action::Next => self.next(),
                 Action::SwitchFocus => self.switch_focus(),
@@ -708,11 +720,8 @@ impl MainState {
         self.popup_stack.last()
     }
 
-    pub fn spawn_help_popup(&mut self) {
-        self.popup_stack.push(Box::new(HelpPopup::new(
-            "Main Help".to_owned(),
-            self.help_text.clone(),
-        )));
+    pub fn spawn_help_popup(&mut self, help_popup: HelpPopup) {
+        self.popup_stack.push(Box::new(help_popup));
     }
 
     pub fn update_help_text(&mut self, config: &Config) {
