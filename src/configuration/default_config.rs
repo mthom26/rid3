@@ -8,8 +8,8 @@ pub const DEFAULT_CONFIG: &str = r#"
     window_border = 'Blue'
     window_title = 'LightRed'
     secondary_title = 'Blue'
-    active_window_title = 'Gray'
-    active_border = 'Gray'
+    active_window_title = 'LightYellow'
+    active_border = 'LightYellow'
     active_title = 'Gray'
 
     list_highlighted_fg = 'LightGreen'

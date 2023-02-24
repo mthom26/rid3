@@ -7,7 +7,7 @@ use tui::{
 use crate::{
     configuration::{actions::Action, Config},
     popups::{Popup, PopupData, PopupHelpType, PopupRender},
-    render::{basic, border, list_active, window_title},
+    render::{active_border, active_window_title, basic, border, list_active, window_title},
     state::AppEvent,
 };
 
@@ -152,17 +152,22 @@ impl Popup for DoubleInput {
         let list = List::new(items)
             .block(
                 Block::default()
-                    .title(Span::styled("Popup One", window_title(config)))
+                    .title(Span::styled("Frame", window_title(config)))
                     .style(border(config))
                     .borders(Borders::ALL),
             )
             .style(basic(config))
             .highlight_style(list_active(config));
 
+        let (title_style, border_style) = match self.input_focused {
+            true => (active_window_title(config), active_border(config)),
+            false => (window_title(config), border(config)),
+        };
+
         let input_block = Paragraph::new(Span::styled(&self.input, basic(config))).block(
             Block::default()
-                .title(Span::styled("Popup One", window_title(config)))
-                .style(border(config))
+                .title(Span::styled("Input", title_style))
+                .style(border_style)
                 .borders(Borders::ALL),
         );
 

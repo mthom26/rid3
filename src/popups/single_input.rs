@@ -7,7 +7,7 @@ use tui::{
 use crate::{
     configuration::{actions::Action, Config},
     popups::{Popup, PopupData, PopupRender},
-    render::{basic, border, window_title},
+    render::{active_border, active_window_title, basic, border, window_title},
     state::AppEvent,
 };
 
@@ -87,8 +87,8 @@ impl Popup for SingleInput {
 
         let input_block = Paragraph::new(Span::styled(&self.input, basic(config))).block(
             Block::default()
-                .title(Span::styled("Input", window_title(config)))
-                .style(border(config))
+                .title(Span::styled("Input", active_window_title(config)))
+                .style(active_border(config))
                 .borders(Borders::ALL),
         );
 
