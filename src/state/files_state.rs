@@ -31,6 +31,8 @@ pub struct FilesState {
     pub show_hidden_dirs: bool,
 
     help_text: Vec<String>,
+
+    trigger_logs: bool,
 }
 
 impl FilesState {
@@ -47,6 +49,7 @@ impl FilesState {
             files_state: ListState::default(),
             show_hidden_dirs: false,
             help_text: vec![],
+            trigger_logs: false,
         })
     }
 
@@ -73,6 +76,7 @@ impl FilesState {
             }
             action
         };
+        self.trigger_logs = false;
 
         if let Some(popup) = self.popup_stack.last_mut() {
             match popup.handle_input(key, action) {
@@ -108,6 +112,7 @@ impl FilesState {
                         } else {
                             if let Err(e) = self.enter_dir(i) {
                                 warn!("{}", e);
+                                self.trigger_logs = true;
                             }
                         }
                     }
@@ -116,10 +121,15 @@ impl FilesState {
                     self.show_hidden_dirs = !self.show_hidden_dirs;
                     if let Err(e) = self.refresh_dir() {
                         warn!("{}", e);
+                        self.trigger_logs = true;
                     }
                 }
                 _ => {}
             }
+        }
+
+        if self.trigger_logs {
+            *show_logs = true;
         }
         AppEvent::None
     }
@@ -154,6 +164,7 @@ impl FilesState {
                     self.files_state.select(Some(0));
                 } else {
                     warn!("Not a directory!");
+                    self.trigger_logs = true;
                 }
             }
             _ => {}
@@ -245,6 +256,7 @@ fn get_tags(entries: &[FilesStateItem]) -> Result<Vec<Entry>, anyhow::Error> {
                             kind: id3::ErrorKind::NoTag,
                             ..
                         }) => {
+                            // TODO - Trigger show logs from here
                             warn!("File has no id3 tag, adding empty tag");
                             Tag::new()
                         }

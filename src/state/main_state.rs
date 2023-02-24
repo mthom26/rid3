@@ -97,6 +97,8 @@ pub struct MainState {
     help_text: Vec<String>,
     pub template_string: String,
     rex: Regex,
+
+    trigger_logs: bool,
 }
 
 impl MainState {
@@ -114,6 +116,7 @@ impl MainState {
             help_text: vec![],
             template_string,
             rex,
+            trigger_logs: false,
         }
     }
 
@@ -158,6 +161,7 @@ impl MainState {
             }
             action
         };
+        self.trigger_logs = false;
 
         if let Some(popup) = self.popup_stack.last_mut() {
             match popup.handle_input(key, action) {
@@ -170,6 +174,7 @@ impl MainState {
                         PopupData::SingleInput(text) => {
                             if text.is_empty() {
                                 warn!("Text frame contained an empty field, not adding new frame");
+                                *show_logs = true;
                                 return AppEvent::None;
                             }
 
@@ -215,6 +220,7 @@ impl MainState {
 
                             if description.is_empty() || value.is_empty() {
                                 warn!("User defined text frame contained an empty field, not adding new frame");
+                                *show_logs = true;
                                 return AppEvent::None;
                             }
 
@@ -236,6 +242,7 @@ impl MainState {
                         PopupData::TemplateInput(text) => {
                             if text.is_empty() {
                                 warn!("Template field cannot be empty");
+                                *show_logs = true;
                                 return AppEvent::None;
                             }
                             info!("Updating template string to '{}'", text);
@@ -291,6 +298,10 @@ impl MainState {
                 Action::TemplatePopup => self.spawn_template_popup(),
                 _ => {}
             }
+        }
+
+        if self.trigger_logs {
+            *show_logs = true;
         }
         AppEvent::None
     }
@@ -460,6 +471,7 @@ impl MainState {
             Some(i) => i,
             None => {
                 warn!("files_state not selected");
+                self.trigger_logs = true;
                 return;
             }
         };
@@ -489,6 +501,7 @@ impl MainState {
             Some(i) => i,
             None => {
                 warn!("files_state not selected");
+                self.trigger_logs = true;
                 return;
             }
         };
@@ -604,7 +617,10 @@ impl MainState {
                         let popup = SingleInput::new(t, text);
                         self.popup_stack.push(Box::new(popup));
                     }
-                    id => warn!("Unhandled frame type: {}", id),
+                    id => {
+                        warn!("Unhandled frame type: {}", id);
+                        self.trigger_logs = true;
+                    }
                 },
             }
         }
@@ -632,6 +648,7 @@ impl MainState {
                                 entry.filename,
                                 frame.id()
                             );
+                            self.trigger_logs = true;
                             abort_write = true;
                         }
                     }
@@ -642,6 +659,7 @@ impl MainState {
                                 entry.filename,
                                 frame.id()
                             );
+                            self.trigger_logs = true;
                             abort_write = true;
                         }
                     }
@@ -672,7 +690,6 @@ impl MainState {
     }
 
     // TODO - Format track numbers with a leading zero
-    //      - Add warning for malformed template string
     fn update_filenames(&mut self) {
         let mats: Vec<Match> = self.rex.find_iter(&self.template_string).collect();
 
@@ -683,7 +700,9 @@ impl MainState {
             if let Ok(id) = frame_data::name_to_id(text[1]) {
                 frame_ids.push(id);
             } else {
-                warn!("Unknown frame id in template string: '{}'", text[1]);
+                error!("Unknown frame id in template string: '{}'", text[1]);
+                self.trigger_logs = true;
+                return;
             }
         }
 
@@ -696,11 +715,13 @@ impl MainState {
                             Content::Text(text) => contents.push(text),
                             _ => {
                                 error!("Content type not supported");
+                                self.trigger_logs = true;
                                 continue 'entries;
                             }
                         }
                     } else {
                         error!("{} does not contain {} frame", entry.filename, id);
+                        self.trigger_logs = true;
                         continue 'entries;
                     }
                 }
