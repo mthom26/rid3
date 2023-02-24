@@ -728,7 +728,19 @@ impl MainState {
 
                 let mut new_name = self.template_string.clone();
                 for (i, mat) in mats.iter().enumerate() {
-                    new_name = new_name.replace(mat.as_str(), contents[i]);
+                    let content = if frame_ids[i] == "TRCK" {
+                        // Add leading zero to track number
+                        // TODO - Handle number/total format
+                        if contents[i].len() < 2 {
+                            format!("0{}", contents[i])
+                        } else {
+                            contents[i].clone()
+                        }
+                    } else {
+                        contents[i].clone()
+                    };
+
+                    new_name = new_name.replace(mat.as_str(), &content);
                 }
                 entry.filename = new_name;
             }
