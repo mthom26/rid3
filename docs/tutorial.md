@@ -1,4 +1,4 @@
-## General Use
+## Tutorial
 
 ### Starting rid3
 
