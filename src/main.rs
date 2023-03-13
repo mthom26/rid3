@@ -101,7 +101,6 @@ async fn main() -> Result<(), anyhow::Error> {
     // Watch for changes in config file
     tokio::spawn(async move {
         if let Some(path) = get_config_dir() {
-            debug!("Started config file watcher");
             let mut watcher = RecommendedWatcher::new(
                 move |res| {
                     futures::executor::block_on(async {
@@ -113,6 +112,37 @@ async fn main() -> Result<(), anyhow::Error> {
             .unwrap();
 
             watcher.watch(&path, RecursiveMode::NonRecursive).unwrap();
+
+            // These do not work???
+            // let watcher = RecommendedWatcher::new(
+            //     move |res| {
+            //         futures::executor::block_on(async {
+            //             config_tx.send(res).await.unwrap();
+            //         })
+            //     },
+            //     notify::Config::default(),
+            // );
+
+            // if watcher.is_ok() {
+            //     watcher.unwrap().watch(&path, RecursiveMode::NonRecursive).unwrap();
+            // }
+
+            // match RecommendedWatcher::new(
+            //     move |res| {
+            //         futures::executor::block_on(async {
+            //             config_tx.send(res).await.unwrap();
+            //         })
+            //     },
+            //     notify::Config::default(),
+            // ) {
+            //     Ok(mut watcher) => {
+            //         watcher.watch(&path, RecursiveMode::NonRecursive).unwrap();
+            //         error!("Created watcher.");
+            //     }
+            //     Err(_) => {
+            //         error!("Could not create watcher.");
+            //     }
+            // }
 
             loop {
                 sleep(Duration::from_millis(200)).await;
@@ -189,23 +219,24 @@ async fn main() -> Result<(), anyhow::Error> {
                 }
             }
             watcher_event = config_rx.recv() => {
-                // TODO - Handle these unwraps properly
-                let event_kind = watcher_event.unwrap().unwrap().kind;
-                // debug!("WATCHER --> {:?}", event_kind);
-                // Different text editors emit many different events when a file is updated
-                // so matching for the `Data()` ModifyKind here should prevent most unnecessary
-                // config rebuilds
-                //
-                // TODO - When using some editors the new config is rebuilt too quickly (before
-                // the new data has actually been written to file). Need to fix this...
-                match event_kind {
-                    EventKind::Modify(ModifyKind::Data(_)) => {
-                        app_config = Config::new();
-                        main_state.update_help_text(&app_config);
-                        files_state.update_help_text(&app_config);
-                        frames_state.update_help_text(&app_config);
-                    },
-                    _ => {}
+                if let Some(event) = watcher_event {
+                    if let Ok(e) = event {
+                        // Different text editors emit many different events when a file is updated
+                        // so matching for the `Data()` ModifyKind here should prevent most unnecessary
+                        // config rebuilds
+                        //
+                        // TODO - When using some editors the new config is rebuilt too quickly (before
+                        // the new data has actually been written to file). Need to fix this...
+                        match e.kind {
+                            EventKind::Modify(ModifyKind::Data(_)) => {
+                                app_config = Config::new();
+                                main_state.update_help_text(&app_config);
+                                files_state.update_help_text(&app_config);
+                                frames_state.update_help_text(&app_config);
+                            },
+                            _ => {}
+                        }
+                    }
                 }
             }
             _ = timer_rx.recv() => { /* Nothing to do, just proceed to next loop iteration */ }
