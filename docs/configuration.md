@@ -7,7 +7,7 @@ The app stores its configuration file in the following locations:
 
 ### Keybindings
 
-Custom keybinds belong in the `actions` section. In the [default config](../src/configuration/default_config.rs) file there are five sub sections, General Actions, Main Screen Actions, Files Screen Actions, Frames Screen Actions and Popup Actions.
+Custom keybinds belong in the `actions` section. In the [default config](../default_config.toml) file there are five sub sections, General Actions, Main Screen Actions, Files Screen Actions, Frames Screen Actions and Popup Actions.
 
 The Main Screen, Files Screen, Frames Screen and Popup Actions are independant of each other and can share keybindings. For example one action in each of these sub sections can have the same key assigned to it. However any keys assigned in the General sub section must not appear elsewhere or the config will be invalid.
 
